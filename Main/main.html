@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio</title>
+
+  <!-- Fuente: League Spartan (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+  <!-- ========== NOTAS MUSICALES DE FONDO (decoración) ========== -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="nota" viewBox="0 0 100 120">
+      <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z"/>
+    </symbol>
+  </svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+
+  <div class="layout">
+
+    <!-- ========== BARRA LATERAL (menú) ========== -->
+    <aside class="lateral">
+      <!-- Avatar: círculo + hombros dibujados en SVG -->
+      <svg class="avatar" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="30" r="22" fill="#fff"/>
+        <path d="M6 100 C6 66 28 56 50 56 C72 56 94 66 94 100 Z" fill="#fff"/>
+      </svg>
+
+      <!-- Nombre del usuario (lo rellena main.js) -->
+      <p class="nombre-lateral" id="nombre-lateral"></p>
+
+      <!-- Menú de navegación. La clase "activo" marca la página actual -->
+      <nav class="menu">
+        <a href="main.html" class="activo">Inicio</a>
+        <a href="#">Playlists</a>   <!-- pendiente: página de playlists -->
+        <a href="#">Foros</a>       <!-- pendiente: página de foros -->
+        <a href="../Login/inicio_sesion/inicio_sesion.html">Cerrar sesión</a>
+      </nav>
+    </aside>
+
+    <!-- ========== CONTENIDO PRINCIPAL ========== -->
+    <main class="contenido">
+
+      <!-- Saludo -->
+      <h1 class="titulo">BIEN-VENIDO <span id="nombre-titulo"></span>!</h1>
+
+      <!-- Barra de búsqueda + botón de nueva playlist -->
+      <div class="barra">
+        <input type="search" id="buscador" placeholder="Títulos, Álbumes, Playlists" aria-label="Buscar">
+        <button type="button" class="amarillo" id="btn-playlist">New Playlist</button>
+      </div>
+
+      <!-- Foros recomendados -->
+      <h2 class="subtitulo">FOROS RECOMENDADOS</h2>
+
+      <!-- Filtros por género (los crea main.js) -->
+      <div class="chips" id="chips" role="tablist" aria-label="Filtrar por género"></div>
+
+      <!-- Tarjetas de foros (las crea main.js) -->
+      <section class="tarjetas" id="tarjetas" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

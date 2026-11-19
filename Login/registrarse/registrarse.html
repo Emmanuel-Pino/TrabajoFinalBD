@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registrarse</title>
+
+  <!-- Fuente: League Spartan (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Estilos compartidos (los usará también el inicio de sesión) -->
+  <link rel="stylesheet" href="registrarse.css">
+</head>
+<body>
+
+  <!-- ========== NOTAS MUSICALES DE FONDO ==========
+       Se define la nota una sola vez (symbol) y se reutiliza 4 veces con <use>.
+       La posición y el tamaño de cada una se controlan en el CSS (.nota:nth-child). -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="nota" viewBox="0 0 100 120">
+      <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z"/>
+    </symbol>
+  </svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+
+  <!-- ========== FORMAS MORADAS DE LA DERECHA (el chevron) ========== -->
+  <div class="forma a"></div>
+  <div class="forma b"></div>
+
+  <!-- ========== TÍTULO DE LA PÁGINA ========== -->
+  <header>
+    <h1>Registrarse</h1>
+  </header>
+
+  <!-- ========== FORMULARIO DE REGISTRO ==========
+       novalidate: desactiva los avisos del navegador para usar los nuestros (registro.js) -->
+  <main>
+    <form id="formulario" novalidate>
+
+      <!-- Campo: nombre -->
+      <div class="campo">
+        <input type="text" id="nombre" placeholder="MiNombre" autocomplete="name">
+        <p class="msg" id="e-nombre"></p> <!-- aquí se muestra el error del nombre -->
+      </div>
+
+      <!-- Campo: correo -->
+      <div class="campo">
+        <input type="email" id="correo" placeholder="Example@gmail.com" autocomplete="email">
+        <p class="msg" id="e-correo"></p>
+      </div>
+
+      <!-- Campo: contraseña -->
+      <div class="campo">
+        <input type="password" id="clave" placeholder="Contraseña" autocomplete="new-password">
+        <p class="msg" id="e-clave"></p>
+      </div>
+
+      <!-- Botón principal -->
+      <button type="submit" class="principal">Registrarse</button>
+
+      <!-- Mensaje de éxito (se llena desde JS) -->
+      <p class="exito" id="exito" role="status"></p>
+
+      <!-- Enlace hacia la otra pantalla (la haremos después) -->
+      <a class="cambio" href="/Login/Inicio_de_sesion/inicio_sesion.html">¿Ya tienes cuenta? Inicia sesión</a>
+    </form>
+  </main>
+
+  <!-- Lógica del formulario de registro -->
+  <script src="registrarse.js"></script>
+</body>
+</html>

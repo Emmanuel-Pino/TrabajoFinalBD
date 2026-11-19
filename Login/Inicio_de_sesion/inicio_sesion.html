@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión</title>
+
+  <!-- Fuente: League Spartan (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Mismos estilos que usa registro.html -->
+  <link rel="stylesheet" href="/Login/registrarse/registrarse.css">
+</head>
+<body>
+
+  <!-- ========== NOTAS MUSICALES DE FONDO ==========
+       Se define la nota una vez (symbol) y se reutiliza 4 veces con <use>. -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="nota" viewBox="0 0 100 120">
+      <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z"/>
+    </symbol>
+  </svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+
+  <!-- ========== FORMAS MORADAS DE LA DERECHA (el chevron) ========== -->
+  <div class="forma a"></div>
+  <div class="forma b"></div>
+
+  <!-- ========== TÍTULO DE LA PÁGINA ========== -->
+  <header>
+    <h1>Iniciar sesión</h1>
+  </header>
+
+  <!-- ========== FORMULARIO DE INICIO DE SESIÓN ==========
+       Solo pide correo y contraseña (sin nombre).
+       novalidate: usamos nuestros propios avisos (login.js). -->
+  <main>
+    <form id="formulario" novalidate>
+
+      <!-- Campo: correo -->
+      <div class="campo">
+        <input type="email" id="correo" placeholder="Example@gmail.com" autocomplete="email">
+        <p class="msg" id="e-correo"></p> <!-- error del correo -->
+      </div>
+
+      <!-- Campo: contraseña -->
+      <div class="campo">
+        <input type="password" id="clave" placeholder="Contraseña" autocomplete="current-password">
+        <p class="msg" id="e-clave"></p> <!-- error de la contraseña -->
+      </div>
+
+      <!-- Botón principal -->
+      <button type="submit" class="principal">Iniciar sesión</button>
+
+      <!-- Mensaje de éxito (se llena desde JS) -->
+      <p class="exito" id="exito" role="status"></p>
+
+      <!-- Enlace hacia la pantalla de registro -->
+      <a class="cambio" href="/Login/registrarse/registrarse.html">¿No tienes cuenta? Regístrate</a>
+    </form>
+  </main>
+
+  <!-- Lógica del formulario de inicio de sesión -->
+  <script src="inicio_sesion.js"></script>
+</body>
+</html>
