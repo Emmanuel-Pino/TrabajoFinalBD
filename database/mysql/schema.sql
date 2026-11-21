@@ -103,7 +103,78 @@ CONSTRAINT fk_bib_cancion FOREIGN KEY (id_cancion)
 REFERENCES tbl_cancion(id_cancion) ON DELETE CASCADE
 );
 
-show CREATE TABLE tbl_cancion
+
+
+-- seed
+
+USE proyectoBD;
+
+INSERT INTO tbl_genero (nombre_gen)
+VALUES ('Country');
+
+INSERT INTO tbl_genero (nombre_gen)
+VALUES ('Pop');
+
+INSERT INTO tbl_genero (nombre_gen)
+VALUES ('Hip hop');
+
+INSERT INTO tbl_artista (nombre_art)
+VALUES ('Lana del rey');
+
+INSERT INTO tbl_artista (nombre_art)
+VALUES ('Lady gaga');
+
+INSERT INTO tbl_artista (nombre_art)
+VALUES ('Coolio');
+
+
+INSERT INTO tbl_etiqueta (nombre_etiq, descripcion_etiq)
+VALUES ('estudiar' 'Música para concentrarse');
+
+INSERT INTO tbl_etiqueta (nombre_etiq, descripcion_etiq)
+VALUES ('Chill', 'Música para parcharse');
+
+INSERT INTO tbl_etiqueta (nombre_etiq, descripcion_etiq)
+VALUES ('Gymrata', 'Música para entrenar');
+
+INSERT INTO tbl_cancion
+    (id_genero, id_artista, titulo_can, fecha_publicacion_can, duracion_can, ruta_audio_can)
+VALUES
+    (2, 2, 'Just Dance', '2009-06-17', 1849, 'audio\Lady Gaga - Just Dance (Official Music Video) ft. Colby ODonis.mp3');
+    
+INSERT INTO tbl_cancion
+    (id_genero, id_artista, titulo_can, fecha_publicacion_can, duracion_can, ruta_audio_can)
+VALUES
+    (3, 3, 'Gangstas Paradise', '2017-08-01', 3129, 'audio\Coolio - Gangstas Paradise (feat. L.V.) [Official Music Video].mp3');
+    
+INSERT INTO tbl_cancion
+    (id_genero, id_artista, titulo_can, fecha_publicacion_can, duracion_can, ruta_audio_can)
+VALUES
+    (2, 1, 'Video Games', '2015-06-01', 2423, 'audio\[ Lana del Rey ] - Video Games Traducción al español.mp3');
+    
+
+INSERT INTO tbl_etiqueta_cancion (id_etiqueta, id_cancion)
+VALUES (3, 1);
+
+INSERT INTO tbl_etiqueta_cancion (id_etiqueta, id_cancion)
+VALUES (2, 2);
+
+INSERT INTO tbl_etiqueta_cancion (id_etiqueta, id_cancion)
+VALUES (2, 3);
+
+UPDATE tbl_cancion
+SET ruta_audio_can = 'audio/Lady Gaga - Just Dance (Official Music Video) ft. Colby ODonis.mp3', duracion_can = 256
+WHERE id_cancion = 1;
+
+UPDATE tbl_cancion
+SET ruta_audio_can = 'audio/Coolio - Gangstas Paradise (feat. L.V.) [Official Music Video].mp3', duracion_can = 438
+WHERE id_cancion = 2;
+
+UPDATE tbl_cancion
+SET ruta_audio_can = 'audio/[ Lana del Rey ] - Video Games Traducción al español.mp3', duracion_can = 300
+WHERE id_cancion = 3;
+
+
 
 
 
