@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tus playlists</title>
+
+  <!-- Fuente: League Spartan (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Estilos base compartidos (barra lateral, botones, fondo) -->
+  <link rel="stylesheet" href="../Main/main.css">
+  <!-- Tarjetas de lista, buscador y botones (compartidos con Foros) -->
+  <link rel="stylesheet" href="../Foros/foros.css">
+  <!-- Ajustes propios de Playlists (color de las etiquetas) -->
+  <link rel="stylesheet" href="playlists.css">
+</head>
+<body>
+
+  <!-- ========== FONDO: notas musicales y forma de la derecha ========== -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="nota" viewBox="0 0 100 120">
+      <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z"/>
+    </symbol>
+  </svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <div class="forma-fondo"></div>
+
+  <div class="layout">
+
+    <!-- ========== BARRA LATERAL (igual que en las otras pantallas) ========== -->
+    <aside class="lateral">
+      <svg class="avatar" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="30" r="22" fill="#fff"/>
+        <path d="M6 100 C6 66 28 56 50 56 C72 56 94 66 94 100 Z" fill="#fff"/>
+      </svg>
+      <p class="nombre-lateral" id="nombre-lateral"></p>
+
+      <nav class="menu">
+        <a href="../Main/main.html">Menu</a>
+        <a href="playlists.html" class="activo">Playlists</a>   <!-- página actual -->
+        <a href="../Foros/foros.html">Foros</a>
+        <a href="../Login/inicio_sesion/inicio_sesion.html">Cerrar sesión</a>
+      </nav>
+    </aside>
+
+    <!-- ========== CONTENIDO ========== -->
+    <main class="contenido">
+      <h1 class="titulo">Tus Playlists</h1>
+
+      <!-- Buscador y botones de acción -->
+      <div class="barra">
+        <input type="search" id="buscador" placeholder="Buscar" aria-label="Buscar en tus playlists">
+        <button type="button" class="amarillo" id="btn-nueva">New Playlist</button>
+        <button type="button" class="amarillo" id="btn-explorar">Explorar Playlist</button>
+      </div>
+
+      <!-- Lista de playlists del usuario (la crea playlists.js) -->
+      <section class="lista" id="lista" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script src="playlists.js"></script>
+</body>
+</html>

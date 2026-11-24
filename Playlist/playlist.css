@@ -1,0 +1,22 @@
+/* =====================================================
+   PLAYLISTS: ajustes propios de esta pantalla.
+   La estructura de las tarjetas (.foro, .foro-img,
+   .foro-nombre, .pildoras) viene de ../Foros/foros.css
+   ===================================================== */
+
+/* Las etiquetas aquí NO se estiran: tienen el ancho de su texto
+   y se reparten a lo largo de la tarjeta. */
+.pildoras { justify-content: space-between; }
+
+.pildora {
+  flex: 0 0 auto;                 /* ancho según el texto */
+  padding: 5px 18px;
+  color: var(--texto);
+  background: #5a00c8;            /* etiqueta apagada */
+}
+
+/* Etiqueta resaltada (rosa), como "Country" en la primera tarjeta */
+.pildora.activa {
+  color: var(--oscuro);
+  background: var(--rosa);
+}
