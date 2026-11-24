@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tus foros</title>
+
+  <!-- Fuente: League Spartan (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Estilos base compartidos (barra lateral, botones, fondo) -->
+  <link rel="stylesheet" href="../Main/main.css">
+  <!-- Estilos propios de esta pantalla -->
+  <link rel="stylesheet" href="foros.css">
+</head>
+<body>
+
+  <!-- ========== FONDO: notas musicales y forma de la derecha ========== -->
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="nota" viewBox="0 0 100 120">
+      <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z"/>
+    </symbol>
+  </svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota"><use href="#nota"/></svg>
+  <div class="forma-fondo"></div>
+
+  <div class="layout">
+
+    <!-- ========== BARRA LATERAL (igual que en Main) ========== -->
+    <aside class="lateral">
+      <svg class="avatar" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="30" r="22" fill="#fff"/>
+        <path d="M6 100 C6 66 28 56 50 56 C72 56 94 66 94 100 Z" fill="#fff"/>
+      </svg>
+      <p class="nombre-lateral" id="nombre-lateral"></p>
+
+      <nav class="menu">
+        <a href="../Main/main.html">Inicio</a>
+        <a href="#">Playlists</a>                      <!-- pendiente -->
+        <a href="foros.html" class="activo">Foros</a>  <!-- página actual -->
+        <a href="/Login/Inicio_de_sesion/inicio_sesion.html">Cerrar sesión</a>
+      </nav>
+    </aside>
+
+    <!-- ========== CONTENIDO ========== -->
+    <main class="contenido">
+      <h1 class="titulo">Tus Foros</h1>
+
+      <!-- Buscador y botones de acción -->
+      <div class="barra">
+        <input type="search" id="buscador" placeholder="Buscar" aria-label="Buscar en tus foros">
+        <button type="button" class="amarillo" id="btn-crear">Crear un foro</button>
+        <a class="amarillo" href="../Main/main.html">Explorar foros</a>
+      </div>
+
+      <!-- Lista de foros del usuario (la crea foros.js) -->
+      <section class="lista" id="lista" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <!-- ========== VENTANA PARA CREAR UN FORO ========== -->
+  <dialog id="dialogo" aria-labelledby="dialogo-titulo">
+    <form id="form-foro" novalidate>
+      <h2 id="dialogo-titulo">Crear un foro</h2>
+
+      <div class="campo-dialogo">
+        <input type="text" id="nombre-foro" placeholder="Nombre del foro" maxlength="40" autocomplete="off">
+        <p class="msg" id="e-nombre-foro"></p>
+      </div>
+
+      <div class="acciones">
+        <button type="button" class="amarillo" id="btn-cancelar">Cancelar</button>
+        <button type="submit" class="amarillo">Crear</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="foros.js"></script>
+</body>
+</html>
