@@ -56,6 +56,18 @@
         <input type="search" id="buscador" placeholder="Títulos, Álbumes, Playlists" aria-label="Buscar">
         <button type="button" class="amarillo" id="btn-playlist">Nueva Playlist</button>
       </div>
+      <!-- Canciones disponibles -->
+<section class="seccion-canciones">
+    <div class="cabecera-canciones">
+        <h2 class="subtitulo">CANCIONES</h2>
+        <button type="button" class="amarillo" id="btn-cancion">
+            + Añadir canción
+        </button>
+    </div>
+
+    <div id="lista-canciones" class="lista-canciones"
+         aria-live="polite"></div>
+</section>
 
       <!-- Foros recomendados -->
       <h2 class="subtitulo">FOROS RECOMENDADOS</h2>
@@ -67,7 +79,48 @@
       <section class="tarjetas" id="tarjetas" aria-live="polite"></section>
     </main>
   </div>
+  <!-- REPRODUCTOR DE MÚSICA -->
+<footer class="reproductor">
 
+    <!-- Información de la canción -->
+    <div class="info-reproductor">
+        <h3 id="reproductor-titulo">Selecciona una canción</h3>
+        <p id="reproductor-artista">Sin reproducción</p>
+    </div>
+
+    <!-- Controles principales -->
+    <div class="controles-reproductor">
+
+        <div class="botones-reproductor">
+            <button id="btn-anterior" aria-label="Anterior">⏮</button>
+            <button id="btn-reproducir" aria-label="Reproducir">▶</button>
+            <button id="btn-siguiente" aria-label="Siguiente">⏭</button>
+        </div>
+
+        <div class="progreso-reproductor">
+            <span id="tiempo-actual">0:00</span>
+
+            <input type="range" id="progreso"
+                   min="0" max="100" value="0"
+                   aria-label="Progreso">
+
+            <span id="tiempo-total">0:00</span>
+        </div>
+
+    </div>
+
+    <!-- Control de volumen -->
+    <div class="volumen-reproductor">
+        <span>🔊</span>
+        <input type="range" id="volumen"
+               min="0" max="1" step="0.01" value="0.75"
+               aria-label="Volumen">
+    </div>
+
+    <!-- Elemento encargado de reproducir el MP3 -->
+    <audio id="audio"></audio>
+
+</footer>
   <script src="main.js"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ if (!usuario) {
 
 // textContent (no innerHTML): el nombre nunca se interpreta como código
 $("nombre-lateral").textContent = usuario.nombre;   // nombre bajo el avatar
-$("nombre-titulo").textContent  = usuario.nombre;   // saludo del título
+$("nombre-titulo").textContent = usuario.nombre;   // saludo del título
 
 // Cerrar sesión: borra el usuario guardado y vuelve al login
 $("cerrar-sesion").addEventListener("click", (e) => {
@@ -43,12 +43,12 @@ $("cerrar-sesion").addEventListener("click", (e) => {
 // Cada foro es una comunidad por nicho (RF6).
 // -----------------------------------------------------
 const foros = [
-  { id: 1, nombre: "Country Roads",     genero: "Country", miembros: 1240, descripcion: "Banjos, guitarras y carreteras largas." },
-  { id: 2, nombre: "Nashville Nights",  genero: "Country", miembros: 860,  descripcion: "Lo mejor del country moderno y clásico." },
-  { id: 3, nombre: "Pop Latino",        genero: "Pop",     miembros: 2310, descripcion: "Hits, estrenos y colaboraciones del momento." },
-  { id: 4, nombre: "Synth Pop Club",    genero: "Pop",     miembros: 540,  descripcion: "Sintetizadores y melodías pegajosas." },
-  { id: 5, nombre: "Barrio y Rimas",    genero: "Hip Hop", miembros: 1780, descripcion: "Freestyle, letras y beats de todas las escuelas." },
-  { id: 6, nombre: "Boom Bap Society",  genero: "Hip Hop", miembros: 690,  descripcion: "Samples, vinilos y rap de la vieja escuela." }
+  { id: 1, nombre: "Country Roads", genero: "Country", miembros: 1240, descripcion: "Banjos, guitarras y carreteras largas." },
+  { id: 2, nombre: "Nashville Nights", genero: "Country", miembros: 860, descripcion: "Lo mejor del country moderno y clásico." },
+  { id: 3, nombre: "Pop Latino", genero: "Pop", miembros: 2310, descripcion: "Hits, estrenos y colaboraciones del momento." },
+  { id: 4, nombre: "Synth Pop Club", genero: "Pop", miembros: 540, descripcion: "Sintetizadores y melodías pegajosas." },
+  { id: 5, nombre: "Barrio y Rimas", genero: "Hip Hop", miembros: 1780, descripcion: "Freestyle, letras y beats de todas las escuelas." },
+  { id: 6, nombre: "Boom Bap Society", genero: "Hip Hop", miembros: 690, descripcion: "Samples, vinilos y rap de la vieja escuela." }
 ];
 
 // Géneros disponibles para los filtros
@@ -139,9 +139,197 @@ $("buscador").addEventListener("input", (e) => {
 $("btn-playlist").addEventListener("click", () => {
   alert("Próximamente: crear una playlist.");
 });
+// -----------------------------------------------------
+// CANCIONES: consultar datos desde MySQL mediante la API
+// -----------------------------------------------------
 
+let canciones = [];
+
+async function cargarCanciones() {
+  try {
+    const respuesta = await fetch("http://localhost:3000/api/canciones");
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.ok) {
+      throw new Error("Error al consultar canciones");
+    }
+
+    canciones = datos.canciones;
+    dibujarCanciones();
+
+  } catch (error) {
+    console.error(error);
+    $("lista-canciones").textContent =
+      "No se pudieron cargar las canciones.";
+  }
+}
+
+function dibujarCanciones() {
+  const contenedor = $("lista-canciones");
+  contenedor.innerHTML = "";
+
+  if (canciones.length === 0) {
+    contenedor.textContent = "No hay canciones disponibles.";
+    return;
+  }
+
+  canciones.forEach((c, index) => {
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "cancion";
+
+    const informacion = document.createElement("div");
+
+    const titulo = document.createElement("h3");
+    titulo.textContent = c.titulo_can;
+
+    const artistas = document.createElement("p");
+    artistas.textContent = c.artistas || "Artista desconocido";
+
+    const album = document.createElement("p");
+    album.className = "album-cancion";
+    album.textContent = c.album;
+
+    const duracion = document.createElement("span");
+    duracion.className = "duracion-cancion";
+    duracion.textContent = c.duracion_can;
+
+    informacion.append(titulo, artistas);
+    tarjeta.append(informacion, album, duracion);
+
+    contenedor.appendChild(tarjeta);
+    tarjeta.style.cursor = "pointer";
+
+    tarjeta.addEventListener("click", () => {
+      reproducirCancion(index);
+    });
+  });
+}
+// -----------------------------------------------------
+// REPRODUCTOR DE MÚSICA
+// -----------------------------------------------------
+
+const audio = $("audio");
+let indiceActual = -1;
+
+audio.volume = 0.75;
+
+async function reproducirCancion(index) {
+
+  if (index < 0 || index >= canciones.length) return;
+
+  indiceActual = index;
+
+  const cancion = canciones[index];
+
+  audio.src = "/" + cancion.ruta_audio_can;
+
+  $("reproductor-titulo").textContent = cancion.titulo_can;
+  $("reproductor-artista").textContent = cancion.artistas;
+
+  $("progreso").value = 0;
+  $("tiempo-actual").textContent = "0:00";
+  $("tiempo-total").textContent = "0:00";
+
+  try {
+    await audio.play();
+  } catch (error) {
+    console.error("Error al reproducir:", error);
+  }
+}
+// Reproducir o pausar
+$("btn-reproducir").addEventListener("click", async () => {
+
+  if (canciones.length === 0) return;
+
+  if (indiceActual === -1) {
+    await reproducirCancion(0);
+    return;
+  }
+
+  if (audio.paused) {
+    await audio.play().catch(console.error);
+  } else {
+    audio.pause();
+  }
+});
+
+// Actualizar el icono del botón
+audio.addEventListener("play", () => {
+  $("btn-reproducir").textContent = "⏸";
+  $("btn-reproducir").setAttribute("aria-label", "Pausar");
+});
+
+audio.addEventListener("pause", () => {
+  $("btn-reproducir").textContent = "▶";
+  $("btn-reproducir").setAttribute("aria-label", "Reproducir");
+});
+
+// Siguiente canción
+$("btn-siguiente").addEventListener("click", () => {
+  if (canciones.length === 0) return;
+
+  const siguiente = (indiceActual + 1) % canciones.length;
+  reproducirCancion(siguiente);
+});
+
+// Canción anterior
+$("btn-anterior").addEventListener("click", () => {
+  if (canciones.length === 0) return;
+
+  const anterior = indiceActual <= 0
+    ? canciones.length - 1
+    : indiceActual - 1;
+
+  reproducirCancion(anterior);
+});
+
+// Reproducir automáticamente la siguiente canción
+audio.addEventListener("ended", () => {
+  $("btn-siguiente").click();
+});
+
+// Convertir segundos al formato minutos:segundos
+function formatearTiempo(segundos) {
+    if (!Number.isFinite(segundos)) return "0:00";
+
+    const minutos = Math.floor(segundos / 60);
+    const restantes = Math.floor(segundos % 60);
+
+    return `${minutos}:${String(restantes).padStart(2, "0")}`;
+}
+
+// Obtener la duración real del MP3
+audio.addEventListener("loadedmetadata", () => {
+    $("tiempo-total").textContent = formatearTiempo(audio.duration);
+});
+
+// Actualizar el progreso durante la reproducción
+audio.addEventListener("timeupdate", () => {
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+
+    $("tiempo-actual").textContent = formatearTiempo(audio.currentTime);
+
+    $("progreso").value =
+        (audio.currentTime / audio.duration) * 100;
+});
+
+// Adelantar o retroceder la canción
+$("progreso").addEventListener("input", (e) => {
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+
+    audio.currentTime =
+        (e.target.value / 100) * audio.duration;
+});
+// Sincronizar el volumen inicial
+$("volumen").value = audio.volume;
+
+// Cambiar el volumen
+$("volumen").addEventListener("input", (e) => {
+    audio.volume = Number(e.target.value);
+});
 // -----------------------------------------------------
 // 7) INICIO
 // -----------------------------------------------------
 dibujarChips();
+cargarCanciones();
 dibujarForos();

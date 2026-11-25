@@ -217,3 +217,195 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* =====================================================
+   CANCIONES
+   ===================================================== */
+
+.seccion-canciones {
+    margin: 30px 28px 0;
+}
+
+.cabecera-canciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 16px;
+}
+
+.cabecera-canciones .subtitulo {
+    margin: 0;
+}
+
+.lista-canciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 340px;
+    overflow-y: auto;
+}
+
+.cancion {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 80px;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--campo);
+    border: 3px solid var(--borde);
+    border-radius: 16px;
+    transition: background .15s;
+}
+
+.cancion:hover {
+    background: #4a1090;
+}
+
+.cancion h3 {
+    font-size: 1.1rem;
+    overflow-wrap: anywhere;
+}
+
+.cancion p {
+    color: var(--texto);
+    font-size: .9rem;
+    overflow-wrap: anywhere;
+}
+
+.duracion-cancion {
+    text-align: right;
+    color: var(--texto);
+}
+
+@media (max-width: 760px) {
+    .seccion-canciones {
+        margin: 24px 16px 0 0;
+    }
+
+    .cancion {
+        grid-template-columns: minmax(0, 1fr) 65px;
+    }
+
+    .album-cancion {
+        display: none;
+    }
+}
+/* =====================================================
+   REPRODUCTOR DE MÚSICA
+   ===================================================== */
+
+.reproductor {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100px;
+    background: var(--lateral);
+    border-top: 3px solid var(--borde);
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 28px;
+    z-index: 100;
+}
+
+.info-reproductor {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.info-reproductor h3 {
+    font-size: 1.1rem;
+}
+
+.info-reproductor p {
+    color: var(--texto);
+    margin-top: 5px;
+}
+
+.controles-reproductor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.botones-reproductor {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+}
+
+.botones-reproductor button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+#btn-reproducir {
+    background: var(--amarillo);
+    color: var(--oscuro);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+}
+
+.botones-reproductor button:hover {
+    transform: scale(1.1);
+}
+
+.progreso-reproductor,
+.volumen-reproductor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progreso-reproductor span {
+    font-size: .85rem;
+    color: var(--texto);
+}
+
+#progreso {
+    width: 100%;
+    min-width: 0;
+}
+
+#volumen {
+    width: 100px;
+}
+
+#progreso, #volumen {
+    accent-color: var(--amarillo);
+    cursor: pointer;
+}
+
+.volumen-reproductor {
+    justify-content: flex-end;
+}
+
+/* Evita que el reproductor tape el contenido */
+.layout {
+    height: calc(100% - 100px);
+}
+
+@media (max-width: 760px) {
+    .reproductor {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+
+    .volumen-reproductor {
+        display: none;
+    }
+
+    .layout {
+        height: auto;
+        padding-bottom: 180px;
+    }
+}
