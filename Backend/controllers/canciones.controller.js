@@ -212,4 +212,72 @@ async function actualizarCancion(req, res) {
         }
     }
 }
-module.exports = { listarCanciones, crearCancion, actualizarCancion };
+async function eliminarCancion(req, res) {
+    let conexion;
+    let confirmado = false;
+
+    try {
+        const { id } = req.params;
+
+        conexion = await db.getConnection();
+        await conexion.beginTransaction();
+
+        // Consultar la canción y su ruta de audio
+        const [canciones] = await conexion.execute(`
+            SELECT ruta_audio_can
+            FROM tbl_cancion
+            WHERE id_cancion = ?
+            FOR UPDATE
+        `, [id]);
+
+        if (canciones.length === 0) {
+            await conexion.rollback();
+
+            return res.status(404).json({
+                ok: false,
+                mensaje: "La canción no existe"
+            });
+        }
+
+        const rutaAudio = canciones[0].ruta_audio_can;
+
+        // Eliminar la canción y sus relaciones en cascada
+        await conexion.execute(`
+            DELETE FROM tbl_cancion
+            WHERE id_cancion = ?
+        `, [id]);
+
+        await conexion.commit();
+        confirmado = true;
+
+        // Eliminar el archivo MP3
+        if (rutaAudio) {
+            await fs.unlink(
+                path.join(__dirname, "../audio", path.basename(rutaAudio))
+            ).catch(console.error);
+        }
+
+        res.json({
+            ok: true,
+            mensaje: "Canción eliminada correctamente"
+        });
+
+    } catch (err) {
+        if (conexion && !confirmado) {
+            await conexion.rollback();
+        }
+
+        console.error(err);
+
+        res.status(500).json({
+            ok: false,
+            mensaje: "No se pudo eliminar la canción"
+        });
+
+    } finally {
+        if (conexion) {
+            conexion.release();
+        }
+    }
+}
+module.exports = { listarCanciones, crearCancion, actualizarCancion, eliminarCancion };

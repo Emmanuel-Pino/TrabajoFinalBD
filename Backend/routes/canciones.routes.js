@@ -2,7 +2,8 @@ const express = require("express");
 const {
     listarCanciones,
     crearCancion,
-    actualizarCancion,  
+    actualizarCancion, 
+    eliminarCancion
 } = require("../controllers/canciones.controller");
 
 const upload = require("../middlewares/upload");
@@ -17,4 +18,7 @@ router.post("/canciones", upload.single("audio"), crearCancion);
 
 // PUT - Actualizar canción
 router.put("/canciones/:id", upload.single("audio"), actualizarCancion);
+
+// DELETE - Eliminar canción
+router.delete("/canciones/:id", eliminarCancion);
 module.exports = router;
