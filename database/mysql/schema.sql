@@ -287,10 +287,28 @@ VALUES (5, 8);
 INSERT INTO tbl_usuario (nombre_usu, correo_usu, contrasena_usu)
 VALUES ('prueba', 'prueba@correo.com', 'relleno');
 
-INSERT INTO tbl_playlist (titulo_play, id_usuario) VALUES ('Playlist de prueba', 2);
-INSERT INTO tbl_playlist_cancion (id_playlist, id_cancion) VALUES (3, 1);
-INSERT INTO tbl_biblioteca_usuario (id_usuario, id_cancion, reaccion_bib) VALUES (2, 2, 1);
+INSERT INTO tbl_playlist (titulo_play, id_usuario) VALUES ('Playlist de prueba', 1);
+INSERT INTO tbl_playlist_cancion (id_playlist, id_cancion) VALUES (1, 1);
+INSERT INTO tbl_biblioteca_usuario (id_usuario, id_cancion, reaccion_bib) VALUES (1, 2, 1);
 
+-- Consulta
 
+SELECT c.titulo_can, al.titulo_alb, a.nombre_art, g.nombre_gen
+FROM tbl_cancion c
+JOIN tbl_album al ON al.id_album = c.id_album
+JOIN tbl_artista a ON a.id_artista = al.id_artista
+JOIN tbl_genero_cancion gc ON gc.id_cancion = c.id_cancion
+JOIN tbl_genero g ON g.id_genero = gc.id_genero
+ORDER BY c.id_cancion;
 
+-- Pruebas
+DELETE FROM tbl_artista WHERE id_artista = 5;
+DELETE FROM tbl_genero WHERE id_genero = 1;
+DELETE FROM tbl_genero WHERE nombre_gen = 'Jazz';
+INSERT INTO tbl_biblioteca_usuario VALUES (3, 1, 5);
+DELETE FROM tbl_usuario WHERE id_usuario = 1;
+
+SELECT * FROM tbl_playlist;
+SELECT * FROM tbl_playlist_cancion;
+SELECT * FROM tbl_biblioteca_usuario;
 
