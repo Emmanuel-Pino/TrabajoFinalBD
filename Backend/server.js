@@ -15,13 +15,14 @@ const app = express();
 // -----------------------------------------------------
 app.use(cors());           // permite que las páginas llamen a la API
 app.use(express.json());   // permite leer el cuerpo JSON de las peticiones
-
+app.use("/audio", express.static(path.join(__dirname, "audio")));
 // -----------------------------------------------------
 // RUTAS DE LA API
 // Todo lo de routes/auth.routes.js queda bajo "/api":
 //   POST /api/registro
 // -----------------------------------------------------
 app.use("/api", require("./routes/auth.routes"));
+app.use("/api", require("./routes/canciones.routes"));
 
 // -----------------------------------------------------
 // RUTA DE PRUEBA: comprueba que el servidor y MySQL responden
