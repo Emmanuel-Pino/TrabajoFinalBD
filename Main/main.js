@@ -5,14 +5,38 @@
 const $ = (id) => document.getElementById(id);
 
 // -----------------------------------------------------
-// 1) USUARIO
-// Por ahora es un nombre fijo de prueba.
-// Más adelante vendrá de la sesión que devuelva el servidor.
+// 1) USUARIO (sesión)
+// El login guardó { id, nombre } en sessionStorage (ver
+// inicio_sesion.js). Aquí lo leemos. Si no hay sesión, o el dato
+// está dañado, mandamos a la persona de vuelta al login.
 // -----------------------------------------------------
-const usuario = "PepitoPerea";
+const LOGIN_URL = "/Login/Inicio_de_sesion/inicio_sesion.html";
 
-$("nombre-lateral").textContent = usuario;   // nombre bajo el avatar
-$("nombre-titulo").textContent  = usuario;   // saludo del título
+function leerSesion() {
+  try {
+    const u = JSON.parse(sessionStorage.getItem("usuario"));
+    // Comprobamos que tenga la forma esperada
+    if (u && Number.isInteger(u.id) && typeof u.nombre === "string") return u;
+  } catch (err) { /* JSON dañado: se trata como "sin sesión" */ }
+  return null;
+}
+
+const usuario = leerSesion();
+if (!usuario) {
+  window.location.replace(LOGIN_URL);   // replace: no deja esta página en el historial
+  throw new Error("Sin sesión");        // detiene el resto del script
+}
+
+// textContent (no innerHTML): el nombre nunca se interpreta como código
+$("nombre-lateral").textContent = usuario.nombre;   // nombre bajo el avatar
+$("nombre-titulo").textContent  = usuario.nombre;   // saludo del título
+
+// Cerrar sesión: borra el usuario guardado y vuelve al login
+$("cerrar-sesion").addEventListener("click", (e) => {
+  e.preventDefault();
+  sessionStorage.removeItem("usuario");
+  window.location.href = LOGIN_URL;
+});
 
 // -----------------------------------------------------
 // 2) DATOS FICTICIOS (simulan lo que luego dará la base de datos)
