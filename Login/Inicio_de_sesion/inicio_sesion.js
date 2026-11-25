@@ -1,14 +1,12 @@
 // =====================================================
 // INICIO DE SESIÓN: validación del formulario y envío al servidor
 // Ruta del backend: POST /api/login  (backend/routes/auth.routes.js)
-// IMPORTANTE: abre esta página desde el servidor:
-//   http://localhost:3000/Login/inicio_sesion/inicio_sesion.html
 // =====================================================
 
-// Dirección de la API (el servidor debe estar encendido con npm start)
+// Dirección de la API 
 const API_URL = "http://localhost:3000/api";
 
-// Atajo para no escribir document.getElementById cada vez
+// protip para no escribir document.getElementById cada vez
 const $ = (id) => document.getElementById(id);
 
 // Guardamos el formulario en una variable
@@ -27,17 +25,13 @@ function limpiar() {
   $("exito").textContent = "";
 }
 
-// -----------------------------------------------------
 // error(): marca un campo como inválido y muestra el motivo
-// -----------------------------------------------------
 function error(campo, texto) {
   $(campo).classList.add("invalido");
   $("e-" + campo).textContent = texto;
 }
 
-// -----------------------------------------------------
 // Evento "submit": se ejecuta al presionar el botón
-// -----------------------------------------------------
 formulario.addEventListener("submit", async (e) => {   // async: espera la respuesta del servidor
   e.preventDefault();   // evita que la página se recargue
   limpiar();
@@ -55,7 +49,6 @@ formulario.addEventListener("submit", async (e) => {   // async: espera la respu
   }
 
   // Regla 2: la contraseña no puede estar vacía
-  // (aquí no exigimos 6 caracteres: eso lo decide el backend al comparar)
   if (clave.length === 0) {
     error("clave", "Escribe tu contraseña.");
     todoBien = false;
@@ -64,9 +57,7 @@ formulario.addEventListener("submit", async (e) => {   // async: espera la respu
   // Si algo falló, nos detenemos aquí
   if (!todoBien) return;
 
-  // ---------------------------------------------------
   // Enviar los datos al servidor
-  // ---------------------------------------------------
   boton.disabled = true;               // evita doble clic mientras espera
   boton.textContent = "Entrando...";
 

@@ -1,7 +1,4 @@
-/* =====================================================
-   VARIABLES DE COLOR
-   Cambiando un valor aquí, cambia en toda la página.
-   ===================================================== */
+
 :root {
   --fondo: #230d40;      /* morado oscuro del fondo */
   --campo: #3b0d6b;      /* relleno de los inputs */
@@ -13,9 +10,7 @@
   --error: #ff8fa3;      /* color de mensajes de error */
 }
 
-/* =====================================================
-   BASE
-   ===================================================== */
+
 * { box-sizing: border-box; margin: 0; }   /* quita márgenes y facilita medir cajas */
 html, body { height: 100%; }
 
@@ -23,20 +18,18 @@ body {
   font-family: "League Spartan", "Trebuchet MS", sans-serif;
   background: var(--fondo);
   color: var(--texto);
-  overflow: hidden;      /* evita scroll por las formas decorativas */
+  overflow: hidden;      
   position: relative;
 }
 
-/* =====================================================
-   NOTAS MUSICALES DE FONDO (decoración)
-   ===================================================== */
+
 .nota {
   position: absolute;
   width: 260px;
-  color: #4a2c93;          /* el SVG usa currentColor, así toma este color */
+  color: #4a2c93;          
   opacity: .55;
-  filter: blur(1px);       /* desenfoque leve para dar profundidad */
-  pointer-events: none;    /* no estorban al hacer clic */
+  filter: blur(1px);       
+  pointer-events: none;   
 }
 /* Cada nota tiene su propia posición, tamaño y rotación */
 .nota:nth-child(1) { top: 8%;  left: 6%;  transform: rotate(-8deg); }
@@ -44,10 +37,6 @@ body {
 .nota:nth-child(3) { bottom: -8%; left: -3%; width: 300px; transform: rotate(-4deg); }
 .nota:nth-child(4) { bottom: -6%; left: 66%; width: 240px; transform: rotate(8deg); }
 
-/* =====================================================
-   FORMAS DE LA DERECHA (chevron)
-   clip-path recorta el rectángulo para dejar la punta en flecha.
-   ===================================================== */
 .forma {
   position: absolute;
   top: 0; right: 0;
@@ -57,9 +46,6 @@ body {
 .forma.a { width: 24%; background: var(--chevron1); }
 .forma.b { width: 16%; background: var(--chevron2); }
 
-/* =====================================================
-   TÍTULO (cápsula translúcida + texto con resplandor)
-   ===================================================== */
 header {
   position: absolute;
   top: 18px; left: 24px;
@@ -69,28 +55,26 @@ header {
   border-radius: 28px;
 }
 h1 {
-  font-size: clamp(1.6rem, 4vw, 2.2rem);   /* se adapta al ancho de pantalla */
+  font-size: clamp(1.6rem, 4vw, 2.2rem);  
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 0 6px #fff, 0 0 18px #c58bff;   /* efecto neón */
+  text-shadow: 0 0 6px #fff, 0 0 18px #c58bff;   
 }
 
-/* =====================================================
-   FORMULARIO (centrado en la pantalla)
-   ===================================================== */
+
 main {
   position: relative;
   min-height: 100%;
   display: grid;
   place-items: center;
-  padding: 110px 20px 30px;   /* deja espacio arriba para el título */
+  padding: 110px 20px 30px;   
 }
 form {
   width: min(400px, 100%);
   display: flex;
-  flex-direction: column;     /* campos uno debajo de otro */
+  flex-direction: column;     
   align-items: center;
-  gap: 22px;                  /* separación entre campos */
+  gap: 22px;                 
 }
 .campo { width: 100%; }
 
@@ -103,20 +87,20 @@ input {
   color: #fff;
   background: var(--campo);
   border: 3px solid var(--borde);
-  border-radius: 30px;        /* forma de píldora */
+  border-radius: 30px;        
   outline: none;
   transition: box-shadow .2s, border-color .2s;
 }
 input::placeholder { color: var(--texto); opacity: .9; }
-input:focus {               /* cuando el usuario hace clic en el campo */
+input:focus {               
   box-shadow: 0 0 0 4px rgba(128, 0, 255, .45);
   border-color: #b366ff;
 }
-input.invalido { border-color: var(--error); }   /* JS agrega esta clase si hay error */
+input.invalido { border-color: var(--error); }   
 
 /* ---------- Mensaje de error bajo cada campo ---------- */
 .msg {
-  min-height: 1.1em;          /* reserva el espacio para que nada "salte" */
+  min-height: 1.1em;          
   margin: 4px 0 0 28px;
   font-size: .85rem;
   color: var(--error);
@@ -150,9 +134,7 @@ button.principal:focus-visible,
 /* ---------- Mensaje de éxito ---------- */
 .exito { color: var(--boton); font-weight: 700; min-height: 1.2em; }
 
-/* =====================================================
-   RESPONSIVE (pantallas pequeñas)
-   ===================================================== */
+/* RESPONSIVE */
 @media (max-width: 700px) {
   .forma.a { width: 14%; }
   .forma.b { width: 9%; }

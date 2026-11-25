@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iniciar sesión</title>
 
-  <!-- Fuente: League Spartan (Google Fonts) -->
+  <!-- Fuente: League Spartan -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
 
-  <!-- Estilos compartidos (están en la carpeta registrarse) -->
+  <!-- Estilos -->
   <link rel="stylesheet" href="../registrarse/registrarse.css">
 </head>
 <body>
@@ -26,24 +26,24 @@
   <svg class="nota"><use href="#nota"/></svg>
   <svg class="nota"><use href="#nota"/></svg>
 
-  <!-- ========== FORMAS MORADAS DE LA DERECHA (el chevron) ========== -->
+  <!-- ========== FORMAS MORADAS DE LA DERECHA ========== -->
   <div class="forma a"></div>
   <div class="forma b"></div>
 
-  <!-- ========== TÍTULO DE LA PÁGINA ========== -->
+
   <header>
     <h1>Iniciar sesión</h1>
   </header>
 
   <!-- ========== FORMULARIO DE INICIO DE SESIÓN ==========
-       Solo pide correo y contraseña (sin nombre).
-       novalidate: usamos nuestros propios avisos (login.js). -->
+       Pedimos el correo y la contraseña
+       usamos nuestros propios avisos (login.js). -->
   <main>
-    <form id="formulario" novalidate>
+    <form id="formulario" novalidate> // novalidate: desactiva los avisos del navegador para usar los nuestros (login.js)
 
       <!-- Campo: correo -->
       <div class="campo">
-        <input type="email" id="correo" maxlength="100" placeholder="Example@gmail.com" autocomplete="email">
+        <input type="email" id="correo" maxlength="100" placeholder="ejemplo8221@gmail.com" autocomplete="email">
         <p class="msg" id="e-correo"></p> <!-- error del correo -->
       </div>
 
