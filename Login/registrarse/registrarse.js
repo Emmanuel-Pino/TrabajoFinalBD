@@ -89,7 +89,7 @@ formulario.addEventListener("submit", async (e) => {   // async: espera la respu
       $("exito").textContent = "¡Cuenta creada, " + nombre + "! Redirigiendo...";
       formulario.reset();
       setTimeout(() => {
-        window.location.href = "../inicio_sesion/inicio_sesion.html";
+        window.location.href = "/Login/Inicio_de_sesion/inicio_sesion.html";   // redirige a la pantalla de inicio de sesión
       }, 1500);
       return;
     }
