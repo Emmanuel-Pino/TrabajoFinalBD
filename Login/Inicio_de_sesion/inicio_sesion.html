@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
 
-  <!-- Mismos estilos que usa registro.html -->
-  <link rel="stylesheet" href="/Login/registrarse/registrarse.css">
+  <!-- Estilos compartidos (están en la carpeta registrarse) -->
+  <link rel="stylesheet" href="../registrarse/registrarse.css">
 </head>
 <body>
 
@@ -43,24 +43,27 @@
 
       <!-- Campo: correo -->
       <div class="campo">
-        <input type="email" id="correo" placeholder="Example@gmail.com" autocomplete="email">
+        <input type="email" id="correo" maxlength="100" placeholder="Example@gmail.com" autocomplete="email">
         <p class="msg" id="e-correo"></p> <!-- error del correo -->
       </div>
 
       <!-- Campo: contraseña -->
       <div class="campo">
-        <input type="password" id="clave" placeholder="Contraseña" autocomplete="current-password">
+        <input type="password" id="clave" maxlength="72" placeholder="Contraseña" autocomplete="current-password">
         <p class="msg" id="e-clave"></p> <!-- error de la contraseña -->
       </div>
 
       <!-- Botón principal -->
-      <button type="submit" class="principal">Iniciar sesión</button>
+      <button type="submit" class="principal" id="boton">Iniciar sesión</button>
+
+      <!-- Error general (ej: contraseña incorrecta o servidor apagado) -->
+      <p class="msg" id="e-general" role="alert"></p>
 
       <!-- Mensaje de éxito (se llena desde JS) -->
       <p class="exito" id="exito" role="status"></p>
 
       <!-- Enlace hacia la pantalla de registro -->
-      <a class="cambio" href="/Login/registrarse/registrarse.html">¿No tienes cuenta? Regístrate</a>
+      <a class="cambio" href="../registrarse/registrarse.html">¿No tienes cuenta? Regístrate</a>
     </form>
   </main>
 

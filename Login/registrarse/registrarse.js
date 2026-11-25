@@ -1,12 +1,19 @@
 // =====================================================
-// REGISTRO: validación del formulario
+// REGISTRO: validación del formulario y envío al servidor
+// Ruta del backend: POST /api/registro  (backend/routes/auth.routes.js)
+// IMPORTANTE: abre esta página desde el servidor:
+//   http://localhost:3000/Login/registrarse/registrarse.html
 // =====================================================
+
+// Dirección de la API (el servidor debe estar encendido con npm start)
+const API_URL = "http://localhost:3000/api";
 
 // Atajo para no escribir document.getElementById cada vez
 const $ = (id) => document.getElementById(id);
 
 // Guardamos el formulario en una variable
 const formulario = $("formulario");
+const boton = $("boton");
 
 // -----------------------------------------------------
 // limpiar(): borra errores y mensajes de la vez anterior
@@ -16,6 +23,7 @@ function limpiar() {
     $(campo).classList.remove("invalido");   // quita el borde rojo
     $("e-" + campo).textContent = "";        // borra el texto de error
   });
+  $("e-general").textContent = "";   // error general (ej: servidor apagado)
   $("exito").textContent = "";
 }
 
@@ -30,7 +38,7 @@ function error(campo, texto) {
 // -----------------------------------------------------
 // Evento "submit": se ejecuta al presionar el botón
 // -----------------------------------------------------
-formulario.addEventListener("submit", (e) => {
+formulario.addEventListener("submit", async (e) => {   // async: espera la respuesta del servidor
   e.preventDefault();   // evita que la página se recargue
   limpiar();
 
@@ -62,8 +70,40 @@ formulario.addEventListener("submit", (e) => {
   // Si algo falló, nos detenemos aquí
   if (!todoBien) return;
 
-  // Aquí iría la conexión con el backend, por ejemplo con fetch().
-  // Por ahora solo mostramos un mensaje de éxito.
-  $("exito").textContent = "¡Cuenta creada, " + nombre + "!";
-  formulario.reset();   // vacía los campos
+  // ---------------------------------------------------
+  // Enviar los datos al servidor
+  // ---------------------------------------------------
+  boton.disabled = true;               // evita doble clic mientras espera
+  boton.textContent = "Creando...";
+
+  try {
+    const respuesta = await fetch(API_URL + "/registro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },   // enviamos JSON
+      body: JSON.stringify({ nombre, correo, clave })
+    });
+    const datos = await respuesta.json();   // { ok, mensaje, campo?, usuario? }
+
+    if (datos.ok) {
+      // Todo salió bien: avisamos y llevamos al inicio de sesión
+      $("exito").textContent = "¡Cuenta creada, " + nombre + "! Redirigiendo...";
+      formulario.reset();
+      setTimeout(() => {
+        window.location.href = "../inicio_sesion/inicio_sesion.html";
+      }, 1500);
+      return;
+    }
+
+    // El servidor rechazó los datos: "campo" dice dónde mostrar el error
+    if (datos.campo) error(datos.campo, datos.mensaje);
+    else $("e-general").textContent = datos.mensaje || "No se pudo crear la cuenta.";
+
+  } catch (err) {
+    // No hubo respuesta: el servidor está apagado o la dirección es otra
+    $("e-general").textContent = "No se pudo conectar con el servidor.";
+  }
+
+  // Si llegamos aquí hubo un error: devolvemos el botón a la normalidad
+  boton.disabled = false;
+  boton.textContent = "Registrarse";
 });

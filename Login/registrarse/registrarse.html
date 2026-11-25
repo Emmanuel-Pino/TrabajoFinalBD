@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
 
-  <!-- Estilos compartidos (los usará también el inicio de sesión) -->
+  <!-- Estilos de esta pantalla (también los usa inicio_sesion.html) -->
   <link rel="stylesheet" href="registrarse.css">
 </head>
 <body>
@@ -43,30 +43,33 @@
 
       <!-- Campo: nombre -->
       <div class="campo">
-        <input type="text" id="nombre" placeholder="MiNombre" autocomplete="name">
+        <input type="text" id="nombre" maxlength="50" placeholder="MiNombre" autocomplete="name">
         <p class="msg" id="e-nombre"></p> <!-- aquí se muestra el error del nombre -->
       </div>
 
       <!-- Campo: correo -->
       <div class="campo">
-        <input type="email" id="correo" placeholder="Example@gmail.com" autocomplete="email">
+        <input type="email" id="correo" maxlength="100" placeholder="Example@gmail.com" autocomplete="email">
         <p class="msg" id="e-correo"></p>
       </div>
 
       <!-- Campo: contraseña -->
       <div class="campo">
-        <input type="password" id="clave" placeholder="Contraseña" autocomplete="new-password">
+        <input type="password" id="clave" maxlength="72" placeholder="Contraseña" autocomplete="new-password">
         <p class="msg" id="e-clave"></p>
       </div>
 
       <!-- Botón principal -->
-      <button type="submit" class="principal">Registrarse</button>
+      <button type="submit" class="principal" id="boton">Registrarse</button>
+
+      <!-- Error general (ej: servidor apagado) -->
+      <p class="msg" id="e-general" role="alert"></p>
 
       <!-- Mensaje de éxito (se llena desde JS) -->
       <p class="exito" id="exito" role="status"></p>
 
       <!-- Enlace hacia la otra pantalla (la haremos después) -->
-      <a class="cambio" href="/Login/Inicio_de_sesion/inicio_sesion.html">¿Ya tienes cuenta? Inicia sesión</a>
+      <a class="cambio" href="../inicio_sesion/inicio_sesion.html">¿Ya tienes cuenta? Inicia sesión</a>
     </form>
   </main>
 
