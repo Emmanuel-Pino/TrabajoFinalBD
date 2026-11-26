@@ -16,6 +16,9 @@ const app = express();
 app.use(cors());           // permite que las páginas llamen a la API
 app.use(express.json());   // permite leer el cuerpo JSON de las peticiones
 app.use("/audio", express.static(path.join(__dirname, "audio")));
+app.use("/api", require("./routes/artistas.routes"));
+app.use("/api", require("./routes/albumes.routes"));
+app.use("/api", require("./routes/canciones.routes"));
 // -----------------------------------------------------
 // RUTAS DE LA API
 // Todo lo de routes/auth.routes.js queda bajo "/api":

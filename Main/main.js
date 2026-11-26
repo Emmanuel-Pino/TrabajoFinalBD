@@ -129,7 +129,9 @@ function dibujarForos() {
 // -----------------------------------------------------
 $("buscador").addEventListener("input", (e) => {
   textoBusqueda = e.target.value.trim().toLowerCase();
+
   dibujarForos();
+  dibujarCanciones();
 });
 
 // -----------------------------------------------------
@@ -163,17 +165,33 @@ async function cargarCanciones() {
       "No se pudieron cargar las canciones.";
   }
 }
+function normalizarTexto(texto) {
+  return String(texto ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 function dibujarCanciones() {
   const contenedor = $("lista-canciones");
   contenedor.innerHTML = "";
 
-  if (canciones.length === 0) {
-    contenedor.textContent = "No hay canciones disponibles.";
+  const busqueda = normalizarTexto(textoBusqueda);
+
+  const cancionesFiltradas = canciones
+    .map((c, index) => ({ c, index }))
+    .filter(({ c }) =>
+      normalizarTexto(c.titulo_can).includes(busqueda) ||
+      normalizarTexto(c.artistas).includes(busqueda) ||
+      normalizarTexto(c.album).includes(busqueda)
+    );
+
+  if (cancionesFiltradas.length === 0) {
+    contenedor.textContent = "No se encontraron canciones.";
     return;
   }
 
-  canciones.forEach((c, index) => {
+  cancionesFiltradas.forEach(({ c, index }) => {
     const tarjeta = document.createElement("article");
     tarjeta.className = "cancion";
 
@@ -290,42 +308,181 @@ audio.addEventListener("ended", () => {
 
 // Convertir segundos al formato minutos:segundos
 function formatearTiempo(segundos) {
-    if (!Number.isFinite(segundos)) return "0:00";
+  if (!Number.isFinite(segundos)) return "0:00";
 
-    const minutos = Math.floor(segundos / 60);
-    const restantes = Math.floor(segundos % 60);
+  const minutos = Math.floor(segundos / 60);
+  const restantes = Math.floor(segundos % 60);
 
-    return `${minutos}:${String(restantes).padStart(2, "0")}`;
+  return `${minutos}:${String(restantes).padStart(2, "0")}`;
 }
 
 // Obtener la duración real del MP3
 audio.addEventListener("loadedmetadata", () => {
-    $("tiempo-total").textContent = formatearTiempo(audio.duration);
+  $("tiempo-total").textContent = formatearTiempo(audio.duration);
 });
 
 // Actualizar el progreso durante la reproducción
 audio.addEventListener("timeupdate", () => {
-    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+  if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
 
-    $("tiempo-actual").textContent = formatearTiempo(audio.currentTime);
+  $("tiempo-actual").textContent = formatearTiempo(audio.currentTime);
 
-    $("progreso").value =
-        (audio.currentTime / audio.duration) * 100;
+  $("progreso").value =
+    (audio.currentTime / audio.duration) * 100;
 });
 
 // Adelantar o retroceder la canción
 $("progreso").addEventListener("input", (e) => {
-    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+  if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
 
-    audio.currentTime =
-        (e.target.value / 100) * audio.duration;
+  audio.currentTime =
+    (e.target.value / 100) * audio.duration;
 });
 // Sincronizar el volumen inicial
 $("volumen").value = audio.volume;
 
 // Cambiar el volumen
 $("volumen").addEventListener("input", (e) => {
-    audio.volume = Number(e.target.value);
+  audio.volume = Number(e.target.value);
+});
+// -----------------------------------------------------
+// MODAL PARA REGISTRAR CANCIONES
+// -----------------------------------------------------
+
+const modalCancion = $("modal-cancion");
+
+$("btn-cancion").addEventListener("click", async () => {
+  if (await cargarOpcionesCancion()) {
+    modalCancion.showModal();
+    modalCancion.scrollTop = 0;
+  }
+});
+
+$("cerrar-modal").addEventListener("click", () => {
+  modalCancion.close();
+});
+
+$("cancelar-cancion").addEventListener("click", () => {
+  modalCancion.close();
+});
+async function cargarOpcionesCancion() {
+  try {
+    const [resArtistas, resAlbumes] = await Promise.all([
+      fetch("/api/artistas"),
+      fetch("/api/albumes")
+    ]);
+
+    const datosArtistas = await resArtistas.json();
+    const datosAlbumes = await resAlbumes.json();
+
+    if (!resArtistas.ok || !resAlbumes.ok ||
+      !datosArtistas.ok || !datosAlbumes.ok) {
+      throw new Error("Error al cargar las opciones");
+    }
+
+    const selectArtistas = $("artistas-can");
+    const selectAlbumes = $("album-can");
+
+    selectArtistas.innerHTML = "";
+    selectAlbumes.innerHTML =
+      '<option value="">Seleccionar álbum</option>';
+
+    datosArtistas.artistas.forEach((artista) => {
+      const etiqueta = document.createElement("label");
+      etiqueta.className = "opcion-artista";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.name = "artistas";
+      checkbox.value = artista.id_artista;
+
+      const nombre = document.createElement("span");
+      nombre.textContent = artista.nombre_art;
+
+      etiqueta.append(checkbox, nombre);
+      selectArtistas.appendChild(etiqueta);
+    });
+
+    datosAlbumes.albumes.forEach((album) => {
+      const opcion = document.createElement("option");
+
+      opcion.value = album.id_album;
+      opcion.textContent =
+        `${album.titulo_alb} - ${album.artista}`;
+
+      selectAlbumes.appendChild(opcion);
+    });
+
+    return true;
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudieron cargar los artistas y álbumes.");
+    return false;
+  }
+}
+// -----------------------------------------------------
+// OBTENER DURACIÓN DEL ARCHIVO MP3
+// -----------------------------------------------------
+
+$("audio-can").addEventListener("change", (e) => {
+
+    const archivo = e.target.files[0];
+
+    $("duracion-can").value = "";
+
+    if (!archivo) return;
+
+    // Validar extensión
+    if (!archivo.name.toLowerCase().endsWith(".mp3")) {
+        alert("Solo se permiten archivos MP3.");
+        e.target.value = "";
+        return;
+    }
+
+    // Validar tamaño máximo
+    if (archivo.size > 20 * 1024 * 1024) {
+        alert("El archivo no puede superar los 20 MB.");
+        e.target.value = "";
+        return;
+    }
+
+    const audioTemporal = new Audio();
+    const url = URL.createObjectURL(archivo);
+
+    audioTemporal.preload = "metadata";
+
+    audioTemporal.addEventListener("loadedmetadata", () => {
+
+        if (e.target.files[0] === archivo) {
+            if (Number.isFinite(audioTemporal.duration) &&
+                audioTemporal.duration > 0) {
+
+                const segundos = Math.floor(audioTemporal.duration);
+
+                $("duracion-can").value = new Date(segundos * 1000)
+                    .toISOString()
+                    .slice(11, 19);
+
+            } else {
+                alert("No se pudo obtener la duración.");
+                e.target.value = "";
+            }
+        }
+
+        URL.revokeObjectURL(url);
+    });
+
+    audioTemporal.addEventListener("error", () => {
+        URL.revokeObjectURL(url);
+
+        if (e.target.files[0] === archivo) {
+            alert("No se pudo leer el archivo MP3.");
+            e.target.value = "";
+        }
+    });
+
+    audioTemporal.src = url;
 });
 // -----------------------------------------------------
 // 7) INICIO
