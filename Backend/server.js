@@ -19,6 +19,7 @@ app.use("/audio", express.static(path.join(__dirname, "audio")));
 app.use("/api", require("./routes/artistas.routes"));
 app.use("/api", require("./routes/albumes.routes"));
 app.use("/api", require("./routes/canciones.routes"));
+app.use("/api", require("./routes/playlists.routes"));
 // -----------------------------------------------------
 // RUTAS DE LA API
 // Todo lo de routes/auth.routes.js queda bajo "/api":
