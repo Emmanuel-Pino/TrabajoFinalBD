@@ -1,9 +1,5 @@
 // =====================================================
 // CONEXIÓN A MYSQL
-// Usa un "pool": varias conexiones listas para reutilizar
-// (más rápido que abrir una conexión nueva en cada petición).
-// Los datos de conexión salen del archivo .env, nunca van
-// escritos directamente en el código.
 // =====================================================
 
 // Lee el archivo .env y carga sus valores en process.env
@@ -23,6 +19,4 @@ const pool = mysql.createPool({
   connectionLimit: 10                         // máximo de conexiones a la vez
 });
 
-// Exportamos el pool para usarlo desde los controladores:
-//   const db = require("../config/db");
 module.exports = pool;

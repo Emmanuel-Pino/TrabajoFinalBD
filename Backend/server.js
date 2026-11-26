@@ -7,6 +7,7 @@ const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const db = require("./config/db");
+const { conectarMongo, obtenerMongo } = require("./config/mongo");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/api", require("./routes/artistas.routes"));
 app.use("/api", require("./routes/albumes.routes"));
 app.use("/api", require("./routes/canciones.routes"));
 app.use("/api", require("./routes/playlists.routes"));
+app.use("/api", require("./routes/comunidades.routes"));
 app.use("/Playlist", express.static(
     path.join(__dirname, "../Playlist")
 ));
@@ -29,19 +31,40 @@ app.use("/Playlist", express.static(
 //   POST /api/registro
 // -----------------------------------------------------
 app.use("/api", require("./routes/auth.routes"));
-app.use("/api", require("./routes/canciones.routes"));
+
 
 // -----------------------------------------------------
 // RUTA DE PRUEBA: comprueba que el servidor y MySQL responden
 // Ábrela en el navegador: http://localhost:3000/api/salud
 // -----------------------------------------------------
 app.get("/api/salud", async (req, res) => {
-  try {
-    await db.query("SELECT 1");
-    res.json({ ok: true, mensaje: "Servidor y base de datos funcionando." });
-  } catch (err) {
-    res.status(500).json({ ok: false, mensaje: "No hay conexión con MySQL.", detalle: err.code });
-  }
+
+    const estado = {
+        MySQL: "Desconectado",
+        MongoDB: "Desconectado"
+    };
+
+    try {
+        await db.query("SELECT 1");
+        estado.MySQL = "Conectado";
+    } catch (error) {
+        console.error("Error en MySQL:", error.message);
+    }
+
+    try {
+        await obtenerMongo().command({ ping: 1 });
+        estado.MongoDB = "Conectado";
+    } catch (error) {
+        console.error("Error en MongoDB:", error.message);
+    }
+
+    const ok = estado.MySQL === "Conectado" &&
+               estado.MongoDB === "Conectado";
+
+    res.status(ok ? 200 : 503).json({
+        ok,
+        bases_de_datos: estado
+    });
 });
 
 // -----------------------------------------------------
@@ -59,15 +82,33 @@ const raiz = path.join(__dirname, "..");
 // -----------------------------------------------------
 const PUERTO = process.env.PORT || 3000;
 
-app.listen(PUERTO, async () => {
-  console.log("Servidor listo en http://localhost:" + PUERTO);
+async function iniciarServidor() {
 
-  // Al arrancar probamos la conexión a MySQL y avisamos del resultado
-  try {
-    await db.query("SELECT 1");
-    console.log("Conexión a MySQL correcta.");
-  } catch (err) {
-    console.error("No se pudo conectar a MySQL (" + err.code + ").");
-    console.error("Revisa los datos de tu archivo .env y que MySQL esté encendido.");
-  }
-});
+    try {
+
+        // Verificar conexión con MySQL
+        await db.query("SELECT 1");
+
+        console.log("Conexión a MySQL correcta.");
+
+        // Establecer conexión con MongoDB
+        await conectarMongo();
+
+        // Iniciar servidor Express
+        app.listen(PUERTO, () => {
+
+            console.log(
+                "Servidor listo en http://localhost:" + PUERTO
+            );
+        });
+
+    } catch (error) {
+
+        console.error("Error al iniciar el servidor:");
+        console.error(error.message);
+
+        process.exit(1);
+    }
+}
+
+iniciarServidor();
