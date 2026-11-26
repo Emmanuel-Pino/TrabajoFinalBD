@@ -39,90 +39,294 @@ $("cerrar-sesion").addEventListener("click", (e) => {
 });
 
 // -----------------------------------------------------
-// 2) DATOS FICTICIOS (simulan lo que luego dará la base de datos)
-// Cada foro es una comunidad por nicho (RF6).
+// 2) COMUNIDADES REALES DE MONGODB
 // -----------------------------------------------------
-const foros = [
-  { id: 1, nombre: "Country Roads", genero: "Country", miembros: 1240, descripcion: "Banjos, guitarras y carreteras largas." },
-  { id: 2, nombre: "Nashville Nights", genero: "Country", miembros: 860, descripcion: "Lo mejor del country moderno y clásico." },
-  { id: 3, nombre: "Pop Latino", genero: "Pop", miembros: 2310, descripcion: "Hits, estrenos y colaboraciones del momento." },
-  { id: 4, nombre: "Synth Pop Club", genero: "Pop", miembros: 540, descripcion: "Sintetizadores y melodías pegajosas." },
-  { id: 5, nombre: "Barrio y Rimas", genero: "Hip Hop", miembros: 1780, descripcion: "Freestyle, letras y beats de todas las escuelas." },
-  { id: 6, nombre: "Boom Bap Society", genero: "Hip Hop", miembros: 690, descripcion: "Samples, vinilos y rap de la vieja escuela." }
-];
 
-// Géneros disponibles para los filtros
-const generos = ["Country", "Pop", "Hip Hop"];
+let foros = [];
 
-// Estado actual de la pantalla
-let generoActivo = generos[0];     // filtro seleccionado
-let textoBusqueda = "";            // lo escrito en el buscador
-const unidos = new Set();          // ids de foros a los que el usuario se unió
+let generos = ["Todos"];
+
+let generoActivo = "Todos";
+
+let textoBusqueda = "";
+
+let uniendoComunidad = false;
+
+async function cargarForos() {
+
+    try {
+
+        const respuesta = await fetch("/api/comunidades");
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(
+                datos.mensaje || "Error al consultar comunidades"
+            );
+        }
+
+        foros = datos.comunidades;
+
+        // Obtener los géneros existentes sin repetirlos
+
+        const generosUnicos = new Map();
+
+        foros.forEach(foro => {
+
+            foro.generos.forEach(genero => {
+
+                const clave = normalizarTexto(genero);
+
+                if (clave !== "todos" && !generosUnicos.has(clave)) {
+                    generosUnicos.set(clave, genero);
+                }
+            });
+        });
+
+        generos = [
+            "Todos",
+            ...Array.from(generosUnicos.values())
+                .sort((a, b) => a.localeCompare(b))
+        ];
+
+        if (!generos.includes(generoActivo)) {
+            generoActivo = "Todos";
+        }
+
+        dibujarChips();
+
+        dibujarForos();
+
+    } catch (error) {
+
+        console.error(error);
+
+        foros = [];
+
+        $("tarjetas").textContent =
+            "No se pudieron cargar las comunidades.";
+    }
+}
 
 // -----------------------------------------------------
-// 3) FILTROS (chips)
+// 3) FILTROS POR GÉNERO
 // -----------------------------------------------------
+
 function dibujarChips() {
-  $("chips").innerHTML = "";
-  generos.forEach((g) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "chip";
-    b.textContent = g;
-    b.setAttribute("role", "tab");
-    b.setAttribute("aria-selected", g === generoActivo);
-    b.addEventListener("click", () => {
-      generoActivo = g;      // cambia el filtro
-      dibujarChips();        // repinta los chips (para marcar el elegido)
-      dibujarForos();        // repinta las tarjetas
+
+    const contenedor = $("chips");
+
+    contenedor.replaceChildren();
+
+    generos.forEach(genero => {
+
+        const boton = document.createElement("button");
+
+        boton.type = "button";
+
+        boton.className = "chip";
+
+        boton.textContent = genero;
+
+        boton.setAttribute("role", "tab");
+
+        boton.setAttribute(
+            "aria-selected",
+            genero === generoActivo
+        );
+
+        boton.addEventListener("click", () => {
+
+            generoActivo = genero;
+
+            dibujarChips();
+
+            dibujarForos();
+        });
+
+        contenedor.appendChild(boton);
     });
-    $("chips").appendChild(b);
-  });
 }
 
 // -----------------------------------------------------
-// 4) TARJETAS DE FOROS
-// Muestra solo los foros del género elegido que coincidan con la búsqueda.
+// 4) TARJETAS DE COMUNIDADES
 // -----------------------------------------------------
+
 function dibujarForos() {
-  const contenedor = $("tarjetas");
-  contenedor.innerHTML = "";
 
-  const lista = foros.filter((f) =>
-    f.genero === generoActivo &&
-    f.nombre.toLowerCase().includes(textoBusqueda)
-  );
+    const contenedor = $("tarjetas");
 
-  if (lista.length === 0) {
-    contenedor.innerHTML = '<p class="vacio">No hay foros que coincidan.</p>';
-    return;
-  }
+    contenedor.replaceChildren();
 
-  lista.forEach((f) => {
-    const yaUnido = unidos.has(f.id);
+    const busqueda = normalizarTexto(textoBusqueda);
 
-    const tarjeta = document.createElement("article");
-    tarjeta.className = "tarjeta";
-    tarjeta.innerHTML = `
-      <h3>${f.nombre}</h3>
-      <p>${f.descripcion}</p>
-      <div class="pie">
-        <span>${f.miembros + (yaUnido ? 1 : 0)} miembros</span>
-        <button type="button" class="amarillo ${yaUnido ? "unido" : ""}">
-          ${yaUnido ? "Salir" : "Unirse"}
-        </button>
-      </div>`;
+    const lista = foros.filter(foro => {
 
-    // Botón Unirse / Salir (RF6)
-    tarjeta.querySelector("button").addEventListener("click", () => {
-      if (unidos.has(f.id)) unidos.delete(f.id);
-      else unidos.add(f.id);
-      dibujarForos();
+        const coincideGenero =
+            generoActivo === "Todos" ||
+            foro.generos.some(genero =>
+                normalizarTexto(genero) ===
+                normalizarTexto(generoActivo)
+            );
+
+        const contenido = [
+            foro.nombre,
+            foro.descripcion,
+            ...foro.generos,
+            ...foro.etiquetas
+        ].join(" ");
+
+        const coincideBusqueda =
+            normalizarTexto(contenido).includes(busqueda);
+
+        return coincideGenero && coincideBusqueda;
     });
 
-    contenedor.appendChild(tarjeta);
-  });
+    if (lista.length === 0) {
+
+        const mensaje = document.createElement("p");
+
+        mensaje.className = "vacio";
+
+        mensaje.textContent =
+            "No hay comunidades que coincidan.";
+
+        contenedor.appendChild(mensaje);
+
+        return;
+    }
+
+    lista.forEach(foro => {
+
+        const yaUnido = foro.miembros.includes(usuario.id);
+
+        const tarjeta = document.createElement("article");
+
+        tarjeta.className = "tarjeta";
+
+        // Nombre
+
+        const nombre = document.createElement("h3");
+
+        nombre.textContent = foro.nombre;
+
+        // Descripción
+
+        const descripcion = document.createElement("p");
+
+        descripcion.textContent = foro.descripcion;
+
+        // Géneros musicales
+
+        const generosForo = document.createElement("p");
+
+        generosForo.textContent = foro.generos.join(" · ");
+
+        // Pie de tarjeta
+
+        const pie = document.createElement("div");
+
+        pie.className = "pie";
+
+        const miembros = document.createElement("span");
+
+        const cantidad = foro.miembros.length;
+
+        miembros.textContent =
+            cantidad + (cantidad === 1 ? " miembro" : " miembros");
+
+        const boton = document.createElement("button");
+
+        boton.type = "button";
+
+        boton.className = "amarillo";
+
+        boton.textContent = yaUnido ? "Entrar" : "Unirse";
+
+        boton.addEventListener("click", () => {
+
+            if (yaUnido) {
+
+                window.location.href =
+                    "/Foros/foros.html?id=" +
+                    encodeURIComponent(foro._id);
+
+            } else {
+
+                unirseForo(foro._id, boton);
+            }
+        });
+
+        pie.append(miembros, boton);
+
+        tarjeta.append(
+            nombre,
+            descripcion,
+            generosForo,
+            pie
+        );
+
+        contenedor.appendChild(tarjeta);
+    });
 }
+
+// -----------------------------------------------------
+// UNIRSE A UNA COMUNIDAD DESDE MAIN
+// -----------------------------------------------------
+
+async function unirseForo(id, boton) {
+
+    if (uniendoComunidad) return;
+
+    uniendoComunidad = true;
+
+    boton.disabled = true;
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/comunidades/${id}/unirse`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    id_usuario: usuario.id
+                })
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+
+            throw new Error(
+                datos.mensaje || "No se pudo unir a la comunidad"
+            );
+        }
+
+        await cargarForos();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        uniendoComunidad = false;
+
+        boton.disabled = false;
+    }
+}
+
 
 // -----------------------------------------------------
 // 5) BUSCADOR: filtra los foros mientras se escribe
@@ -139,7 +343,9 @@ $("buscador").addEventListener("input", (e) => {
 // Más adelante abrirá el formulario para crear una playlist.
 // -----------------------------------------------------
 $("btn-playlist").addEventListener("click", () => {
-  alert("Próximamente: crear una playlist.");
+
+    window.location.href = "/Playlist/playlist.html";
+
 });
 // -----------------------------------------------------
 // CANCIONES: consultar datos desde MySQL mediante la API
@@ -1009,6 +1215,6 @@ async function editarCancion(id) {
 // -----------------------------------------------------
 // 7) INICIO
 // -----------------------------------------------------
-dibujarChips();
 cargarCanciones();
-dibujarForos();
+
+cargarForos();

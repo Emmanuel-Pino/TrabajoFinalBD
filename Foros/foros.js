@@ -783,4 +783,28 @@ $("btn-volver").addEventListener("click", () => {
 // 14. INICIALIZAR PÁGINA
 // -----------------------------------------------------
 
-cargarComunidades();
+async function inicializarForos() {
+
+    await cargarComunidades();
+
+    const parametros = new URLSearchParams(
+        window.location.search
+    );
+
+    const idComunidad = parametros.get("id");
+
+    if (idComunidad) {
+
+        await abrirComunidad(idComunidad);
+
+        // Limpiar el parámetro de la URL
+
+        window.history.replaceState(
+            null,
+            "",
+            window.location.pathname
+        );
+    }
+}
+
+inicializarForos();
