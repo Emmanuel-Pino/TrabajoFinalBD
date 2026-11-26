@@ -13,6 +13,7 @@ async function listarCanciones(req, res) {
     c.duracion_can,
     c.ruta_audio_can,
     c.id_album,
+    c.id_usuario,
     al.titulo_alb AS album,
     al.id_artista AS id_artista_principal,
 
@@ -45,7 +46,8 @@ GROUP BY
     c.duracion_can,
     c.ruta_audio_can,
     c.id_album,
-    al.titulo_alb,
+    c.id_usuario,
+al.titulo_alb,
     al.id_artista
     `);
 
@@ -67,6 +69,7 @@ async function crearCancion(req, res) {
 
     try {
         const { titulo_can, duracion_can } = req.body;
+        const id_usuario = Number(req.body.id_usuario);
 
         const id_album = req.body.id_album || null;
         const artistas = JSON.parse(req.body.artistas || "[]");
@@ -74,21 +77,44 @@ async function crearCancion(req, res) {
         if (
             !titulo_can || !duracion_can || !id_album ||
             !req.file || !Array.isArray(artistas) ||
-            artistas.length === 0
+            artistas.length === 0 ||
+            !Number.isInteger(id_usuario) ||
+            id_usuario <= 0
         ) {
-            throw new Error("Faltan datos obligatorios");
+            throw new Error("Faltan datos obligatorios o usuario inválido");
         }
 
         const ruta_audio_can = `audio/${req.file.filename}`;
 
         conexion = await db.getConnection();
         await conexion.beginTransaction();
+        const [usuarios] = await conexion.execute(`
+    SELECT id_usuario
+    FROM tbl_usuario
+    WHERE id_usuario = ?
+`, [id_usuario]);
+
+        if (usuarios.length === 0) {
+            throw new Error("El usuario no existe");
+        }
 
         const [resultado] = await conexion.execute(`
-            INSERT INTO tbl_cancion
-            (titulo_can, duracion_can, id_album, ruta_audio_can)
-            VALUES (?, ?, ?, ?)
-        `, [titulo_can, duracion_can, id_album, ruta_audio_can]);
+    INSERT INTO tbl_cancion
+    (
+        titulo_can,
+        duracion_can,
+        id_album,
+        ruta_audio_can,
+        id_usuario
+    )
+    VALUES (?, ?, ?, ?, ?)
+`, [
+            titulo_can,
+            duracion_can,
+            id_album,
+            ruta_audio_can,
+            id_usuario
+        ]);
 
         const id_cancion = resultado.insertId;
 
@@ -138,30 +164,51 @@ async function actualizarCancion(req, res) {
     try {
         const { id } = req.params;
         const { titulo_can, duracion_can } = req.body;
+        const id_usuario = Number(req.body.id_usuario);
 
         const id_album = req.body.id_album || null;
         const artistas = JSON.parse(req.body.artistas || "[]");
 
         if (
             !titulo_can || !duracion_can ||
-            !Array.isArray(artistas) || artistas.length === 0
+            !Array.isArray(artistas) ||
+            artistas.length === 0 ||
+            !Number.isInteger(id_usuario) ||
+            id_usuario <= 0
         ) {
-            throw new Error("Faltan datos obligatorios");
+            throw new Error("Faltan datos obligatorios o usuario inválido");
         }
-
         conexion = await db.getConnection();
         await conexion.beginTransaction();
 
         // Consultar la canción actual
         const [canciones] = await conexion.execute(`
-            SELECT ruta_audio_can
-            FROM tbl_cancion
-            WHERE id_cancion = ?
-            FOR UPDATE
-        `, [id]);
+    SELECT ruta_audio_can, id_usuario
+    FROM tbl_cancion
+    WHERE id_cancion = ?
+    FOR UPDATE
+`, [id]);
 
         if (canciones.length === 0) {
-            throw new Error("La canción no existe");
+
+            const error = new Error("La canción no existe");
+
+            error.status = 404;
+
+            throw error;
+        }
+
+        // Verificar que el usuario sea el propietario
+
+        if (canciones[0].id_usuario !== id_usuario) {
+
+            const error = new Error(
+                "No tienes permisos para editar esta canción"
+            );
+
+            error.status = 403;
+
+            throw error;
         }
 
         rutaAnterior = canciones[0].ruta_audio_can;
@@ -173,13 +220,21 @@ async function actualizarCancion(req, res) {
 
         // Actualizar la canción
         await conexion.execute(`
-            UPDATE tbl_cancion
-            SET titulo_can = ?,
-                duracion_can = ?,
-                id_album = ?,
-                ruta_audio_can = ?
-            WHERE id_cancion = ?
-        `, [titulo_can, duracion_can, id_album, rutaAudio, id]);
+    UPDATE tbl_cancion
+    SET titulo_can = ?,
+        duracion_can = ?,
+        id_album = ?,
+        ruta_audio_can = ?
+    WHERE id_cancion = ?
+    AND id_usuario = ?
+`, [
+            titulo_can,
+            duracion_can,
+            id_album,
+            rutaAudio,
+            id,
+            id_usuario
+        ]);
 
         // Actualizar las relaciones con los artistas
         await conexion.execute(`
@@ -221,9 +276,11 @@ async function actualizarCancion(req, res) {
 
         console.error(err);
 
-        res.status(400).json({
+        res.status(err.status || 400).json({
             ok: false,
-            mensaje: "No se pudo actualizar la canción"
+            mensaje: err.status
+                ? err.message
+                : "No se pudo actualizar la canción"
         });
 
     } finally {
@@ -238,17 +295,28 @@ async function eliminarCancion(req, res) {
 
     try {
         const { id } = req.params;
+        const id_usuario = Number(req.query.id_usuario);
+
+        if (
+            !Number.isInteger(id_usuario) ||
+            id_usuario <= 0
+        ) {
+            return res.status(400).json({
+                ok: false,
+                mensaje: "Usuario inválido"
+            });
+        }
 
         conexion = await db.getConnection();
         await conexion.beginTransaction();
 
         // Consultar la canción y su ruta de audio
         const [canciones] = await conexion.execute(`
-            SELECT ruta_audio_can
-            FROM tbl_cancion
-            WHERE id_cancion = ?
-            FOR UPDATE
-        `, [id]);
+    SELECT ruta_audio_can, id_usuario
+    FROM tbl_cancion
+    WHERE id_cancion = ?
+    FOR UPDATE
+`, [id]);
 
         if (canciones.length === 0) {
             await conexion.rollback();
@@ -258,14 +326,25 @@ async function eliminarCancion(req, res) {
                 mensaje: "La canción no existe"
             });
         }
+        // Verificar que el usuario sea el propietario
 
+        if (canciones[0].id_usuario !== id_usuario) {
+
+            await conexion.rollback();
+
+            return res.status(403).json({
+                ok: false,
+                mensaje: "No tienes permisos para eliminar esta canción"
+            });
+        }
         const rutaAudio = canciones[0].ruta_audio_can;
 
         // Eliminar la canción y sus relaciones en cascada
         await conexion.execute(`
-            DELETE FROM tbl_cancion
-            WHERE id_cancion = ?
-        `, [id]);
+    DELETE FROM tbl_cancion
+    WHERE id_cancion = ?
+    AND id_usuario = ?
+`, [id, id_usuario]);
 
         await conexion.commit();
         confirmado = true;

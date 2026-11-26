@@ -393,7 +393,7 @@ button:disabled {
 
 .interior-comunidad {
     display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-columns: 1fr;
     align-items: start;
     gap: 20px;
 }

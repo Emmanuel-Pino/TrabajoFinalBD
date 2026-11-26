@@ -384,7 +384,12 @@ function normalizarTexto(texto) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 }
+// Comprobar si la canción pertenece al usuario conectado
 
+function esPropietarioCancion(cancion) {
+
+    return cancion.id_usuario === usuario.id;
+}
 function dibujarCanciones() {
   const contenedor = $("lista-canciones");
   contenedor.innerHTML = "";
@@ -424,10 +429,17 @@ function dibujarCanciones() {
     duracion.className = "duracion-cancion";
     duracion.textContent = c.duracion_can;
 
-    const acciones = document.createElement("div");
-    acciones.className = "acciones-cancion";
+    
+const acciones = document.createElement("div");
+
+acciones.className = "acciones-cancion";
+
+// Mostrar acciones únicamente al propietario
+
+if (esPropietarioCancion(c)) {
 
     // Botón editar
+
     const botonEditar = document.createElement("button");
 
     botonEditar.type = "button";
@@ -436,11 +448,14 @@ function dibujarCanciones() {
     botonEditar.title = "Editar canción";
 
     botonEditar.addEventListener("click", (e) => {
-      e.stopPropagation();
-      editarCancion(c.id_cancion);
+
+        e.stopPropagation();
+
+        editarCancion(c.id_cancion);
     });
 
     // Botón eliminar
+
     const botonEliminar = document.createElement("button");
 
     botonEliminar.type = "button";
@@ -449,11 +464,15 @@ function dibujarCanciones() {
     botonEliminar.title = "Eliminar canción";
 
     botonEliminar.addEventListener("click", (e) => {
-      e.stopPropagation();
-      eliminarCancion(c.id_cancion);
+
+        e.stopPropagation();
+
+        eliminarCancion(c.id_cancion);
     });
 
     acciones.append(botonEditar, botonEliminar);
+}
+
 
     informacion.append(titulo, artistas);
     tarjeta.append(informacion, album, duracion, acciones);
@@ -1006,6 +1025,7 @@ $("form-cancion").addEventListener("submit", async (e) => {
 
   const formulario = e.target;
   const formData = new FormData(formulario);
+  formData.set("id_usuario", usuario.id);
 
   formData.set(
     "artistas",
@@ -1099,7 +1119,12 @@ async function eliminarCancion(id) {
   const cancion = canciones.find(c => c.id_cancion === id);
 
   if (!cancion) return;
+if (!esPropietarioCancion(cancion)) {
 
+    alert("No tienes permisos para eliminar esta canción.");
+
+    return;
+}
   const confirmar = confirm(
     `¿Estás seguro de eliminar "${cancion.titulo_can}"?`
   );
@@ -1108,9 +1133,14 @@ async function eliminarCancion(id) {
 
   try {
 
-    const respuesta = await fetch(`/api/canciones/${id}`, {
-      method: "DELETE"
-    });
+    const respuesta = await fetch(
+
+    `/api/canciones/${id}?id_usuario=${usuario.id}`,
+
+    {
+        method: "DELETE"
+    }
+);
 
     const datos = await respuesta.json();
 
@@ -1156,6 +1186,12 @@ async function editarCancion(id) {
   const cancion = canciones.find(c => c.id_cancion === id);
 
   if (!cancion) return;
+  if (!esPropietarioCancion(cancion)) {
+
+    alert("No tienes permisos para editar esta canción.");
+
+    return;
+}
 
   try {
 
