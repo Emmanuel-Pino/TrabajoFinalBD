@@ -1,158 +1,786 @@
+
 // =====================================================
-// FOROS: lista de foros del usuario, búsqueda y creación
+// FOROS - COMUNIDADES
+// Integración con MySQL y MongoDB mediante la API
 // =====================================================
 
 const $ = (id) => document.getElementById(id);
 
-// -----------------------------------------------------
-// 1) USUARIO (nombre fijo de prueba, igual que en main.js)
-// -----------------------------------------------------
-const usuario = "PepitoPerea";
-$("nombre-lateral").textContent = usuario;
+const API = "/api/comunidades";
 
 // -----------------------------------------------------
-// 2) DATOS FICTICIOS (luego vendrán de la base de datos)
-// Cada foro tiene un nombre y los artistas que se destacan en él.
+// 1. USUARIO Y SESIÓN
 // -----------------------------------------------------
-const foros = [
-  { id: 1, nombre: "MMM",       artistas: ["Lana del Rey", "Mon Laferte", "Nathalia Lafourcade"] },
-  { id: 2, nombre: "Heartline", artistas: ["Mitski", "DoblePorción", "Buhodermia"] },
-  { id: 3, nombre: "Chillhood", artistas: ["Clairo", "Rex Orange County", "Beach House"] }
-];
 
-let textoBusqueda = "";   // lo escrito en el buscador
+let usuario;
 
-// -----------------------------------------------------
-// 3) IMAGEN DEL FORO
-// Mientras no haya fotos reales, se dibuja un paisaje con SVG.
-// -----------------------------------------------------
-function crearImagen() {
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
-  svg.setAttribute("viewBox", "0 0 66 66");
-  svg.setAttribute("class", "foro-img");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = `
-    <rect width="66" height="66" fill="#bfe3f7"/>
-    <ellipse cx="22" cy="14" rx="9" ry="5" fill="#fff"/>
-    <ellipse cx="30" cy="12" rx="7" ry="5" fill="#fff"/>
-    <path d="M0 40 Q22 28 44 38 T66 34 V66 H0 Z" fill="#a8c800"/>
-    <path d="M0 50 Q24 40 66 48 V66 H0 Z" fill="#7a9a00"/>`;
-  return svg;
+try {
+    usuario = JSON.parse(sessionStorage.getItem("usuario"));
+} catch {
+    usuario = null;
 }
 
-// -----------------------------------------------------
-// 4) DIBUJAR LA LISTA
-// Se arma con createElement + textContent (y no con innerHTML)
-// para que un nombre escrito por el usuario nunca pueda
-// inyectar código en la página.
-// -----------------------------------------------------
-function dibujarForos() {
-  const lista = $("lista");
-  lista.innerHTML = "";
+if (!usuario || !Number.isInteger(Number(usuario.id)) || Number(usuario.id) <= 0) {
+    window.location.replace(
+        "../Login/Inicio_de_sesion/inicio_sesion.html"
+    );
 
-  const visibles = foros.filter((f) =>
-    f.nombre.toLowerCase().includes(textoBusqueda)
-  );
-
-  if (visibles.length === 0) {
-    const p = document.createElement("p");
-    p.className = "vacio";
-    p.textContent = foros.length === 0
-      ? "Aún no tienes foros. ¡Crea el primero!"
-      : "No hay foros que coincidan.";
-    lista.appendChild(p);
-    return;
-  }
-
-  visibles.forEach((f) => {
-    const tarjeta = document.createElement("article");
-    tarjeta.className = "foro";
-    tarjeta.tabIndex = 0;                          // se puede enfocar con teclado
-    tarjeta.setAttribute("role", "button");
-    tarjeta.setAttribute("aria-label", "Abrir foro " + f.nombre);
-
-    const nombre = document.createElement("h2");
-    nombre.className = "foro-nombre";
-    nombre.textContent = f.nombre;
-
-    const pildoras = document.createElement("div");
-    pildoras.className = "pildoras";
-    f.artistas.slice(0, 3).forEach((a) => {        // máximo 3 artistas
-      const span = document.createElement("span");
-      span.className = "pildora";
-      span.textContent = a;
-      span.title = a;                              // nombre completo al pasar el mouse
-      pildoras.appendChild(span);
-    });
-
-    tarjeta.append(crearImagen(), nombre, pildoras);
-
-    // Abrir el foro (pendiente: página con blog y chat, RF7 y RF8)
-    const abrir = () => alert("Próximamente: abrir el foro " + f.nombre);
-    tarjeta.addEventListener("click", abrir);
-    tarjeta.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); }
-    });
-
-    lista.appendChild(tarjeta);
-  });
+    throw new Error("No hay una sesión válida");
 }
 
-// -----------------------------------------------------
-// 5) BUSCADOR
-// -----------------------------------------------------
-$("buscador").addEventListener("input", (e) => {
-  textoBusqueda = e.target.value.trim().toLowerCase();
-  dibujarForos();
+const idUsuario = Number(usuario.id);
+
+$("nombre-lateral").textContent = usuario.nombre;
+
+$("cerrar-sesion").addEventListener("click", () => {
+    sessionStorage.removeItem("usuario");
 });
 
 // -----------------------------------------------------
-// 6) CREAR UN FORO (ventana emergente)
+// 2. VARIABLES DE ESTADO
 // -----------------------------------------------------
-const dialogo = $("dialogo");
-const campoNombre = $("nombre-foro");
 
-function limpiarErrorForo() {
-  campoNombre.classList.remove("invalido");
-  $("e-nombre-foro").textContent = "";
+let comunidades = [];
+let textoBusqueda = "";
+let filtroActual = "todas";
+let comunidadActual = null;
+let idComunidadEditar = null;
+let guardando = false;
+let operacionPendiente = false;
+let versionCarga = 0;
+
+const dialogo = $("dialogo");
+
+// -----------------------------------------------------
+// 3. FUNCIONES AUXILIARES
+// -----------------------------------------------------
+
+function normalizarTexto(texto) {
+
+    return String(texto ?? "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+function convertirArreglo(texto) {
+
+    return [...new Set(
+        texto.split(",")
+            .map(elemento => elemento.trim())
+            .filter(Boolean)
+    )];
+}
+
+function esCreador(comunidad) {
+
+    return comunidad.id_creador === idUsuario;
+}
+
+function esMiembro(comunidad) {
+
+    return comunidad.miembros.includes(idUsuario);
+}
+
+function textoMiembros(comunidad) {
+
+    const cantidad = comunidad.miembros.length;
+
+    return cantidad + (cantidad === 1 ? " miembro" : " miembros");
+}
+
+async function solicitar(url, opciones = {}) {
+
+    const respuesta = await fetch(url, opciones);
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.ok) {
+        throw new Error(datos.mensaje || "Error en la petición");
+    }
+
+    return datos;
+}
+
+function crearElemento(etiqueta, clase, texto) {
+
+    const elemento = document.createElement(etiqueta);
+
+    if (clase) elemento.className = clase;
+
+    if (texto !== undefined) {
+        elemento.textContent = texto;
+    }
+
+    return elemento;
+}
+
+function crearBoton(texto, clase, accion) {
+
+    const boton = crearElemento("button", clase, texto);
+
+    boton.type = "button";
+
+    boton.addEventListener("click", accion);
+
+    return boton;
+}
+
+function dibujarPildoras(contenedor, valores, etiqueta = false) {
+
+    contenedor.replaceChildren();
+
+    valores.forEach(valor => {
+
+        const pildora = crearElemento(
+            "span",
+            etiqueta ? "pildora etiqueta" : "pildora",
+            valor
+        );
+
+        contenedor.appendChild(pildora);
+    });
+}
+
+// -----------------------------------------------------
+// 4. CARGAR COMUNIDADES DESDE MONGODB
+// -----------------------------------------------------
+
+async function cargarComunidades() {
+
+    const version = ++versionCarga;
+
+    $("lista").textContent = "Cargando comunidades...";
+
+    try {
+
+        let url = API;
+
+        if (filtroActual === "mis") {
+            url += "/mis-comunidades?id_usuario=" + idUsuario;
+        }
+
+        const datos = await solicitar(url);
+
+        // Evitar que una petición anterior sobrescriba
+        // los resultados de un filtro más reciente.
+        if (version !== versionCarga) return;
+
+        comunidades = datos.comunidades;
+
+        dibujarComunidades();
+
+    } catch (error) {
+
+        if (version !== versionCarga) return;
+
+        console.error(error);
+
+        comunidades = [];
+
+        $("lista").replaceChildren(
+            crearElemento("p", "vacio", error.message)
+        );
+    }
+}
+
+// -----------------------------------------------------
+// 5. DIBUJAR LAS COMUNIDADES
+// -----------------------------------------------------
+
+function dibujarComunidades() {
+
+    const lista = $("lista");
+
+    lista.replaceChildren();
+
+    const busqueda = normalizarTexto(textoBusqueda);
+
+    const visibles = comunidades.filter(comunidad => {
+
+        const contenido = [
+            comunidad.nombre,
+            comunidad.descripcion,
+            ...comunidad.generos,
+            ...comunidad.etiquetas
+        ].join(" ");
+
+        return normalizarTexto(contenido).includes(busqueda);
+    });
+
+    if (visibles.length === 0) {
+
+        let mensaje = "No hay comunidades que coincidan.";
+
+        if (comunidades.length === 0) {
+
+            mensaje = filtroActual === "mis"
+                ? "Aún no perteneces a ninguna comunidad."
+                : "Aún no existen comunidades. ¡Crea la primera!";
+        }
+
+        lista.appendChild(
+            crearElemento("p", "vacio", mensaje)
+        );
+
+        return;
+    }
+
+    visibles.forEach(comunidad => {
+
+        const tarjeta = crearElemento("article", "foro");
+
+        // Cabecera
+
+        const cabecera = crearElemento("div", "foro-cabecera");
+
+        const icono = crearElemento("div", "foro-icono", "♫");
+
+        icono.setAttribute("aria-hidden", "true");
+
+        const info = crearElemento("div", "foro-info");
+
+        const nombre = crearElemento(
+            "h2",
+            "foro-nombre",
+            comunidad.nombre
+        );
+
+        const miembros = crearElemento(
+            "p",
+            "foro-miembros",
+            textoMiembros(comunidad)
+        );
+
+        info.append(nombre, miembros);
+
+        cabecera.append(icono, info);
+
+        // Descripción
+
+        const descripcion = crearElemento(
+            "p",
+            "foro-descripcion",
+            comunidad.descripcion
+        );
+
+        // Géneros
+
+        const generos = crearElemento("div", "pildoras");
+
+        dibujarPildoras(generos, comunidad.generos);
+
+        // Etiquetas
+
+        const etiquetas = crearElemento("div", "pildoras");
+
+        dibujarPildoras(etiquetas, comunidad.etiquetas, true);
+
+        // Botones
+
+        const acciones = crearElemento("div", "foro-acciones");
+
+        if (esMiembro(comunidad)) {
+
+            acciones.appendChild(
+                crearBoton("Entrar", "amarillo", () => {
+                    abrirComunidad(comunidad._id);
+                })
+            );
+
+            if (esCreador(comunidad)) {
+
+                acciones.appendChild(
+                    crearBoton("Editar", "btn-secundario", () => {
+                        editarComunidad(comunidad);
+                    })
+                );
+
+                acciones.appendChild(
+                    crearBoton("Eliminar", "btn-peligro", () => {
+                        eliminarComunidad(comunidad);
+                    })
+                );
+
+            } else {
+
+                acciones.appendChild(
+                    crearBoton("Salir", "btn-peligro", () => {
+                        salirComunidad(comunidad);
+                    })
+                );
+            }
+
+        } else {
+
+            acciones.appendChild(
+                crearBoton("Unirse", "amarillo", () => {
+                    unirseComunidad(comunidad);
+                })
+            );
+        }
+
+        tarjeta.append(
+            cabecera,
+            descripcion,
+            generos,
+            etiquetas,
+            acciones
+        );
+
+        lista.appendChild(tarjeta);
+    });
+}
+
+// -----------------------------------------------------
+// 6. BUSCADOR Y FILTROS
+// -----------------------------------------------------
+
+$("buscador").addEventListener("input", (e) => {
+
+    textoBusqueda = e.target.value.trim();
+
+    dibujarComunidades();
+});
+
+function cambiarFiltro(filtro) {
+
+    filtroActual = filtro;
+
+    $("btn-explorar").classList.toggle(
+        "activo",
+        filtro === "todas"
+    );
+
+    $("btn-mis-comunidades").classList.toggle(
+        "activo",
+        filtro === "mis"
+    );
+
+    cargarComunidades();
+}
+
+$("btn-explorar").addEventListener("click", () => {
+
+    cambiarFiltro("todas");
+});
+
+$("btn-mis-comunidades").addEventListener("click", () => {
+
+    cambiarFiltro("mis");
+});
+
+// -----------------------------------------------------
+// 7. MODAL PARA CREAR Y EDITAR
+// -----------------------------------------------------
+
+function limpiarFormulario() {
+
+    $("form-foro").reset();
+
+    $("error-foro").textContent = "";
+
+    $("dialogo-titulo").textContent = "Crear comunidad";
+
+    $("btn-guardar").textContent = "Crear";
+
+    idComunidadEditar = null;
 }
 
 $("btn-crear").addEventListener("click", () => {
-  limpiarErrorForo();
-  campoNombre.value = "";
-  dialogo.showModal();           // abre la ventana
-  campoNombre.focus();
+
+    limpiarFormulario();
+
+    dialogo.showModal();
+
+    dialogo.scrollTop = 0;
+
+    $("nombre-foro").focus();
 });
 
-$("btn-cancelar").addEventListener("click", () => dialogo.close());
+$("btn-cancelar").addEventListener("click", () => {
 
-$("form-foro").addEventListener("submit", (e) => {
-  e.preventDefault();
-  limpiarErrorForo();
+    if (!guardando) dialogo.close();
+});
 
-  const nombre = campoNombre.value.trim();
+dialogo.addEventListener("cancel", (e) => {
 
-  // Reglas: entre 2 y 40 caracteres y que no exista ya
-  if (nombre.length < 2) {
-    campoNombre.classList.add("invalido");
-    $("e-nombre-foro").textContent = "Escribe un nombre (mínimo 2 caracteres).";
-    return;
-  }
-  if (foros.some((f) => f.nombre.toLowerCase() === nombre.toLowerCase())) {
-    campoNombre.classList.add("invalido");
-    $("e-nombre-foro").textContent = "Ya tienes un foro con ese nombre.";
-    return;
-  }
+    if (guardando) e.preventDefault();
+});
 
-  // Aquí iría el envío al servidor para guardarlo en la base de datos.
-  // Por ahora solo se agrega a la lista en pantalla.
-  foros.unshift({ id: Date.now(), nombre, artistas: [] });
-  dialogo.close();
-  dibujarForos();
+dialogo.addEventListener("close", limpiarFormulario);
+
+// Preparar formulario para editar
+
+function editarComunidad(comunidad) {
+
+    limpiarFormulario();
+
+    idComunidadEditar = comunidad._id;
+
+    $("dialogo-titulo").textContent = "Editar comunidad";
+
+    $("btn-guardar").textContent = "Guardar cambios";
+
+    $("nombre-foro").value = comunidad.nombre;
+
+    $("descripcion-foro").value = comunidad.descripcion;
+
+    $("generos-foro").value = comunidad.generos.join(", ");
+
+    $("etiquetas-foro").value = comunidad.etiquetas.join(", ");
+
+    dialogo.showModal();
+
+    dialogo.scrollTop = 0;
+}
+
+// -----------------------------------------------------
+// 8. CREAR O ACTUALIZAR COMUNIDAD
+// -----------------------------------------------------
+
+$("form-foro").addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    if (guardando) return;
+
+    $("error-foro").textContent = "";
+
+    const nombre = $("nombre-foro").value.trim();
+
+    const descripcion = $("descripcion-foro").value.trim();
+
+    const generos = convertirArreglo(
+        $("generos-foro").value
+    );
+
+    const etiquetas = convertirArreglo(
+        $("etiquetas-foro").value
+    );
+
+    if (!nombre || nombre.length > 60) {
+
+        $("error-foro").textContent =
+            "Escribe un nombre válido de máximo 60 caracteres.";
+
+        return;
+    }
+
+    if (!descripcion || descripcion.length > 300) {
+
+        $("error-foro").textContent =
+            "Escribe una descripción válida.";
+
+        return;
+    }
+
+    if (generos.length === 0) {
+
+        $("error-foro").textContent =
+            "Debes ingresar al menos un género musical.";
+
+        return;
+    }
+
+    const cuerpo = {
+        nombre,
+        descripcion,
+        generos,
+        etiquetas
+    };
+
+    let url = API;
+    let metodo = "POST";
+
+    if (idComunidadEditar) {
+
+        url += "/" + idComunidadEditar;
+
+        metodo = "PUT";
+
+        cuerpo.id_usuario = idUsuario;
+
+    } else {
+
+        cuerpo.id_creador = idUsuario;
+    }
+
+    guardando = true;
+
+    $("btn-guardar").disabled = true;
+
+    $("btn-cancelar").disabled = true;
+
+    try {
+
+        const datos = await solicitar(url, {
+
+            method: metodo,
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(cuerpo)
+        });
+
+        dialogo.close();
+
+        await cargarComunidades();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        $("error-foro").textContent = error.message;
+
+    } finally {
+
+        guardando = false;
+
+        $("btn-guardar").disabled = false;
+
+        $("btn-cancelar").disabled = false;
+    }
 });
 
 // -----------------------------------------------------
-// 7) INICIO
+// 9. ELIMINAR COMUNIDAD
 // -----------------------------------------------------
-dibujarForos();
+
+async function eliminarComunidad(comunidad) {
+
+    if (operacionPendiente) return;
+
+    const confirmado = confirm(
+        `¿Deseas eliminar "${comunidad.nombre}"?\n\n` +
+        "También se eliminarán sus publicaciones y mensajes."
+    );
+
+    if (!confirmado) return;
+
+    operacionPendiente = true;
+
+    try {
+
+        const datos = await solicitar(
+            `${API}/${comunidad._id}?id_usuario=${idUsuario}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        await cargarComunidades();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        operacionPendiente = false;
+    }
+}
+
+// -----------------------------------------------------
+// 10. UNIRSE A UNA COMUNIDAD
+// -----------------------------------------------------
+
+async function unirseComunidad(comunidad) {
+
+    if (operacionPendiente) return;
+
+    operacionPendiente = true;
+
+    try {
+
+        const datos = await solicitar(
+            `${API}/${comunidad._id}/unirse`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    id_usuario: idUsuario
+                })
+            }
+        );
+
+        await cargarComunidades();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        operacionPendiente = false;
+    }
+}
+
+// -----------------------------------------------------
+// 11. SALIR DE UNA COMUNIDAD
+// -----------------------------------------------------
+
+async function salirComunidad(comunidad) {
+
+    if (operacionPendiente) return;
+
+    const confirmado = confirm(
+        `¿Deseas salir de "${comunidad.nombre}"?`
+    );
+
+    if (!confirmado) return;
+
+    operacionPendiente = true;
+
+    try {
+
+        const datos = await solicitar(
+            `${API}/${comunidad._id}/salir`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    id_usuario: idUsuario
+                })
+            }
+        );
+
+        await cargarComunidades();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        operacionPendiente = false;
+    }
+}
+
+// -----------------------------------------------------
+// 12. ABRIR EL INTERIOR DE UNA COMUNIDAD
+// -----------------------------------------------------
+
+async function abrirComunidad(id) {
+
+    if (operacionPendiente) return;
+
+    operacionPendiente = true;
+
+    try {
+
+        const datos = await solicitar(`${API}/${id}`);
+
+        const comunidad = datos.comunidad;
+
+        if (!esMiembro(comunidad)) {
+
+            alert("Debes unirte primero a esta comunidad.");
+
+            await cargarComunidades();
+
+            return;
+        }
+
+        comunidadActual = comunidad;
+
+        $("detalle-nombre").textContent = comunidad.nombre;
+
+        $("detalle-descripcion").textContent =
+            comunidad.descripcion;
+
+        $("detalle-miembros").textContent =
+            textoMiembros(comunidad);
+
+        dibujarPildoras(
+            $("detalle-generos"),
+            comunidad.generos
+        );
+
+        dibujarPildoras(
+            $("detalle-etiquetas"),
+            comunidad.etiquetas,
+            true
+        );
+
+        // Ocultar listado
+
+        $("titulo-pagina").hidden = true;
+
+        $("barra-comunidades").hidden = true;
+
+        $("filtros-comunidades").hidden = true;
+
+        $("lista").hidden = true;
+
+        // Mostrar interior
+
+        $("detalle-comunidad").hidden = false;
+
+        document.querySelector(".contenido").scrollTop = 0;
+
+        // Aquí cargaremos las publicaciones y el chat
+        // en las siguientes fases del proyecto.
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        operacionPendiente = false;
+    }
+}
+
+// -----------------------------------------------------
+// 13. VOLVER AL LISTADO
+// -----------------------------------------------------
+
+$("btn-volver").addEventListener("click", () => {
+
+    comunidadActual = null;
+
+    $("detalle-comunidad").hidden = true;
+
+    $("titulo-pagina").hidden = false;
+
+    $("barra-comunidades").hidden = false;
+
+    $("filtros-comunidades").hidden = false;
+
+    $("lista").hidden = false;
+
+    cargarComunidades();
+});
+
+// -----------------------------------------------------
+// 14. INICIALIZAR PÁGINA
+// -----------------------------------------------------
+
+cargarComunidades();
