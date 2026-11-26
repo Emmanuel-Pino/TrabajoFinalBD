@@ -352,8 +352,8 @@ $("volumen").addEventListener("input", (e) => {
 const modalCancion = $("modal-cancion");
 
 $("btn-cancion").addEventListener("click", () => {
-    modalCancion.showModal();
-    modalCancion.scrollTop = 0;
+  modalCancion.showModal();
+  modalCancion.scrollTop = 0;
 });
 
 $("cerrar-modal").addEventListener("click", () => {
@@ -370,62 +370,62 @@ $("cancelar-cancion").addEventListener("click", () => {
 
 $("audio-can").addEventListener("change", (e) => {
 
-    const archivo = e.target.files[0];
+  const archivo = e.target.files[0];
 
-    $("duracion-can").value = "";
+  $("duracion-can").value = "";
 
-    if (!archivo) return;
+  if (!archivo) return;
 
-    // Validar extensión
-    if (!archivo.name.toLowerCase().endsWith(".mp3")) {
-        alert("Solo se permiten archivos MP3.");
+  // Validar extensión
+  if (!archivo.name.toLowerCase().endsWith(".mp3")) {
+    alert("Solo se permiten archivos MP3.");
+    e.target.value = "";
+    return;
+  }
+
+  // Validar tamaño máximo
+  if (archivo.size > 20 * 1024 * 1024) {
+    alert("El archivo no puede superar los 20 MB.");
+    e.target.value = "";
+    return;
+  }
+
+  const audioTemporal = new Audio();
+  const url = URL.createObjectURL(archivo);
+
+  audioTemporal.preload = "metadata";
+
+  audioTemporal.addEventListener("loadedmetadata", () => {
+
+    if (e.target.files[0] === archivo) {
+      if (Number.isFinite(audioTemporal.duration) &&
+        audioTemporal.duration > 0) {
+
+        const segundos = Math.floor(audioTemporal.duration);
+
+        $("duracion-can").value = new Date(segundos * 1000)
+          .toISOString()
+          .slice(11, 19);
+
+      } else {
+        alert("No se pudo obtener la duración.");
         e.target.value = "";
-        return;
+      }
     }
 
-    // Validar tamaño máximo
-    if (archivo.size > 20 * 1024 * 1024) {
-        alert("El archivo no puede superar los 20 MB.");
-        e.target.value = "";
-        return;
+    URL.revokeObjectURL(url);
+  });
+
+  audioTemporal.addEventListener("error", () => {
+    URL.revokeObjectURL(url);
+
+    if (e.target.files[0] === archivo) {
+      alert("No se pudo leer el archivo MP3.");
+      e.target.value = "";
     }
+  });
 
-    const audioTemporal = new Audio();
-    const url = URL.createObjectURL(archivo);
-
-    audioTemporal.preload = "metadata";
-
-    audioTemporal.addEventListener("loadedmetadata", () => {
-
-        if (e.target.files[0] === archivo) {
-            if (Number.isFinite(audioTemporal.duration) &&
-                audioTemporal.duration > 0) {
-
-                const segundos = Math.floor(audioTemporal.duration);
-
-                $("duracion-can").value = new Date(segundos * 1000)
-                    .toISOString()
-                    .slice(11, 19);
-
-            } else {
-                alert("No se pudo obtener la duración.");
-                e.target.value = "";
-            }
-        }
-
-        URL.revokeObjectURL(url);
-    });
-
-    audioTemporal.addEventListener("error", () => {
-        URL.revokeObjectURL(url);
-
-        if (e.target.files[0] === archivo) {
-            alert("No se pudo leer el archivo MP3.");
-            e.target.value = "";
-        }
-    });
-
-    audioTemporal.src = url;
+  audioTemporal.src = url;
 });
 // -----------------------------------------------------
 // AUTOCOMPLETADO DE ARTISTAS
@@ -436,120 +436,252 @@ let artistasSeleccionados = [];
 
 $("buscar-artista").addEventListener("input", () => {
 
-    clearTimeout(temporizadorArtistas);
+  clearTimeout(temporizadorArtistas);
 
-    const busqueda = $("buscar-artista").value.trim();
+  const busqueda = $("buscar-artista").value.trim();
 
-    $("resultados-artistas").innerHTML = "";
+  $("resultados-artistas").innerHTML = "";
 
-    if (busqueda.length < 2) return;
+  if (busqueda.length < 2) return;
 
-    temporizadorArtistas = setTimeout(() => {
-        buscarArtistas(busqueda);
-    }, 300);
+  temporizadorArtistas = setTimeout(() => {
+    buscarArtistas(busqueda);
+  }, 300);
 });
 
 async function buscarArtistas(busqueda) {
+  try {
+    const respuesta = await fetch(
+      `/api/artistas/buscar?q=${encodeURIComponent(busqueda)}`
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.ok) {
+      throw new Error("Error al buscar artistas");
+    }
+
+    // Ignorar respuestas de búsquedas anteriores
+    if ($("buscar-artista").value.trim() !== busqueda) return;
+
+    const contenedor = $("resultados-artistas");
+
+    contenedor.innerHTML = "";
+
+    datos.artistas.forEach((artista) => {
+
+      const boton = document.createElement("button");
+
+      boton.type = "button";
+      boton.className = "opcion-resultado";
+      boton.textContent = artista.nombre_art;
+
+      boton.addEventListener("click", () => {
+        seleccionarArtista(artista);
+      });
+
+      contenedor.appendChild(boton);
+    });
+const existeArtista = datos.artistas.some(
+    artista => normalizarTexto(artista.nombre_art) ===
+               normalizarTexto(busqueda)
+);
+
+if (!existeArtista) {
+
+    const botonCrear = document.createElement("button");
+
+    botonCrear.type = "button";
+    botonCrear.className = "opcion-resultado crear-resultado";
+    botonCrear.textContent = `+ Registrar artista: ${busqueda}`;
+
+    botonCrear.addEventListener("click", () => {
+        registrarArtista(busqueda);
+    });
+
+    contenedor.appendChild(botonCrear);
+}
+  } catch (error) {
+    console.error(error);
+  }
+}
+async function registrarArtista(nombre) {
+
     try {
+
+        const respuesta = await fetch("/api/artistas", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                nombre_art: nombre
+            })
+        });
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            alert(datos.mensaje || "No se pudo registrar el artista");
+            return;
+        }
+
+        seleccionarArtista(datos.artista);
+
+    } catch (error) {
+
+        console.error(error);
+        alert("Error al registrar el artista");
+
+    }
+}
+function seleccionarArtista(artista) {
+
+  const existe = artistasSeleccionados.some(
+    a => a.id_artista === artista.id_artista
+  );
+
+  if (existe) {
+    alert("Este artista ya está seleccionado.");
+    return;
+  }
+
+  artistasSeleccionados.push(artista);
+
+  $("buscar-artista").value = "";
+  $("resultados-artistas").innerHTML = "";
+
+  dibujarArtistasSeleccionados();
+}
+
+function dibujarArtistasSeleccionados() {
+
+  const contenedor = $("artistas-seleccionados");
+  contenedor.innerHTML = "";
+
+  artistasSeleccionados.forEach((artista, index) => {
+
+    const etiqueta = document.createElement("div");
+    etiqueta.className = "artista-seleccionado";
+
+    const nombre = document.createElement("span");
+    nombre.textContent = artista.nombre_art;
+
+    if (index === 0) {
+      nombre.textContent += " (Principal)";
+    }
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.textContent = "✕";
+
+    boton.addEventListener("click", () => {
+
+      artistasSeleccionados.splice(index, 1);
+
+      if (index === 0) {
+        $("buscar-album").value = "";
+        $("album-can").value = "";
+        $("resultados-albumes").innerHTML = "";
+      }
+
+      dibujarArtistasSeleccionados();
+    });
+
+    etiqueta.append(nombre, boton);
+    contenedor.appendChild(etiqueta);
+  });
+
+  $("buscar-album").disabled = artistasSeleccionados.length === 0;
+
+  $("buscar-album").placeholder = artistasSeleccionados.length > 0
+    ? "Buscar o registrar álbum..."
+    : "Selecciona primero un artista";
+}
+// -----------------------------------------------------
+// AUTOCOMPLETADO DE ÁLBUMES
+// -----------------------------------------------------
+
+let temporizadorAlbumes;
+
+$("buscar-album").addEventListener("input", () => {
+
+    clearTimeout(temporizadorAlbumes);
+
+    $("album-can").value = "";
+    $("resultados-albumes").innerHTML = "";
+
+    if (artistasSeleccionados.length === 0) return;
+
+    const busqueda = $("buscar-album").value.trim();
+    const idArtista = artistasSeleccionados[0].id_artista;
+
+    temporizadorAlbumes = setTimeout(() => {
+        buscarAlbumes(busqueda, idArtista);
+    }, 300);
+});
+async function buscarAlbumes(busqueda, idArtista) {
+
+    try {
+
         const respuesta = await fetch(
-            `/api/artistas/buscar?q=${encodeURIComponent(busqueda)}`
+            `/api/albumes/buscar?id_artista=${idArtista}&q=${encodeURIComponent(busqueda)}`
         );
 
         const datos = await respuesta.json();
 
         if (!respuesta.ok || !datos.ok) {
-            throw new Error("Error al buscar artistas");
+            throw new Error("Error al buscar álbumes");
         }
 
-        // Ignorar respuestas de búsquedas anteriores
-        if ($("buscar-artista").value.trim() !== busqueda) return;
+        // Evitar mostrar resultados de búsquedas anteriores
+        if (
+            $("buscar-album").value.trim() !== busqueda ||
+            artistasSeleccionados[0]?.id_artista !== idArtista ||
+            $("album-can").value !== ""
+        ) return;
 
-        const contenedor = $("resultados-artistas");
+        const contenedor = $("resultados-albumes");
 
         contenedor.innerHTML = "";
 
-        datos.artistas.forEach((artista) => {
+        datos.albumes.forEach((album) => {
 
             const boton = document.createElement("button");
 
             boton.type = "button";
             boton.className = "opcion-resultado";
-            boton.textContent = artista.nombre_art;
+            boton.textContent = album.titulo_alb;
 
-boton.addEventListener("click", () => {
-    seleccionarArtista(artista);
-});
+            boton.addEventListener("click", () => {
+                seleccionarAlbum(album);
+            });
 
-contenedor.appendChild(boton);
+            contenedor.appendChild(boton);
         });
 
     } catch (error) {
         console.error(error);
     }
 }
-function seleccionarArtista(artista) {
+function seleccionarAlbum(album) {
 
-    const existe = artistasSeleccionados.some(
-        a => a.id_artista === artista.id_artista
+    $("buscar-album").value = album.titulo_alb;
+
+    $("album-can").value = album.id_album;
+
+    $("resultados-albumes").innerHTML = "";
+}
+$("buscar-album").addEventListener("focus", () => {
+
+    if (artistasSeleccionados.length === 0) return;
+    if ($("album-can").value !== "") return;
+
+    buscarAlbumes(
+        $("buscar-album").value.trim(),
+        artistasSeleccionados[0].id_artista
     );
-
-    if (existe) {
-        alert("Este artista ya está seleccionado.");
-        return;
-    }
-
-    artistasSeleccionados.push(artista);
-
-    $("buscar-artista").value = "";
-    $("resultados-artistas").innerHTML = "";
-
-    dibujarArtistasSeleccionados();
-}
-
-function dibujarArtistasSeleccionados() {
-
-    const contenedor = $("artistas-seleccionados");
-    contenedor.innerHTML = "";
-
-    artistasSeleccionados.forEach((artista, index) => {
-
-        const etiqueta = document.createElement("div");
-        etiqueta.className = "artista-seleccionado";
-
-        const nombre = document.createElement("span");
-        nombre.textContent = artista.nombre_art;
-
-        if (index === 0) {
-            nombre.textContent += " (Principal)";
-        }
-
-        const boton = document.createElement("button");
-        boton.type = "button";
-        boton.textContent = "✕";
-
-        boton.addEventListener("click", () => {
-
-            artistasSeleccionados.splice(index, 1);
-
-            if (index === 0) {
-                $("buscar-album").value = "";
-                $("album-can").value = "";
-                $("resultados-albumes").innerHTML = "";
-            }
-
-            dibujarArtistasSeleccionados();
-        });
-
-        etiqueta.append(nombre, boton);
-        contenedor.appendChild(etiqueta);
-    });
-
-    $("buscar-album").disabled = artistasSeleccionados.length === 0;
-
-    $("buscar-album").placeholder = artistasSeleccionados.length > 0
-        ? "Buscar o registrar álbum..."
-        : "Selecciona primero un artista";
-}
+});
 // -----------------------------------------------------
 // 7) INICIO
 // -----------------------------------------------------
