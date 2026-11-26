@@ -699,3 +699,65 @@ input:focus-visible {
     accent-color: var(--amarillo);
     cursor: pointer;
 }
+
+.resultados-busqueda {
+    display: flex;
+    flex-direction: column;
+    max-height: 160px;
+    overflow-y: auto;
+    border-radius: 10px;
+    background: var(--campo);
+}
+
+.resultados-busqueda:empty {
+    display: none;
+}
+
+.opcion-resultado {
+    padding: 12px;
+    background: transparent;
+    color: white;
+    border: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.opcion-resultado:hover {
+    background: #4a1090;
+}
+
+.crear-resultado {
+    color: var(--amarillo);
+    font-weight: bold;
+}
+
+#artistas-seleccionados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.artista-seleccionado {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--amarillo);
+    color: var(--oscuro);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.artista-seleccionado button {
+    background: transparent;
+    border: none;
+    color: var(--oscuro);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#buscar-album:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

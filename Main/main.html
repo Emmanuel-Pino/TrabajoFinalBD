@@ -124,51 +124,67 @@
     <audio id="audio"></audio>
 
   </footer>
-  <!-- MODAL PARA REGISTRAR CANCIONES -->
-  <dialog id="modal-cancion" class="modal-cancion">
+  
+<dialog id="modal-cancion" class="modal-cancion">
 
     <div class="cabecera-modal">
-      <h2>AÑADIR CANCIÓN</h2>
-      <button type="button" id="cerrar-modal">✕</button>
+        <h2>AÑADIR CANCIÓN</h2>
+        <button type="button" id="cerrar-modal">✕</button>
     </div>
 
     <form id="form-cancion">
 
-      <label for="titulo-can">Título de la canción</label>
-      <input type="text" id="titulo-can" name="titulo_can" required>
+        <!-- TÍTULO -->
+        <label for="titulo-can">Título de la canción</label>
+        <input type="text" id="titulo-can" name="titulo_can" required>
 
-      <label for="duracion-can">Duración</label>
-      <input type="text" id="duracion-can" name="duracion_can" placeholder="00:00:00" readonly required>
+        <!-- DURACIÓN -->
+        <label for="duracion-can">Duración</label>
+        <input type="text" id="duracion-can" name="duracion_can"
+            placeholder="00:00:00" readonly required>
 
-      <label for="album-can">Álbum</label>
-      <select id="album-can" name="id_album" required>
-        <option value="">Seleccionar álbum</option>
-      </select>
+        <!-- ARTISTAS -->
+        <label for="buscar-artista">Artistas</label>
 
-      <fieldset class="grupo-artistas">
-        <legend>Artistas</legend>
+        <div id="artistas-seleccionados"></div>
 
-        <div id="artistas-can" class="lista-artistas"></div>
+        <input type="text" id="buscar-artista"
+            placeholder="Buscar o registrar artista..."
+            autocomplete="off" maxlength="60">
 
-        <small>Selecciona uno o varios artistas.</small>
-      </fieldset>
-      <label for="audio-can">Archivo MP3</label>
-      <input type="file" id="audio-can" name="audio" accept=".mp3,audio/mpeg" required>
+        <div id="resultados-artistas" class="resultados-busqueda"></div>
 
-      <small>Tamaño máximo: 20 MB.</small>
+        <small>El primer artista seleccionado será el principal.</small>
 
-      <div class="acciones-modal">
-        <button type="button" id="cancelar-cancion">
-          Cancelar
-        </button>
+        <!-- ÁLBUM -->
+        <label for="buscar-album">Álbum</label>
 
-        <button type="submit" class="amarillo">
-          Guardar canción
-        </button>
-      </div>
+        <input type="text" id="buscar-album"
+            placeholder="Selecciona primero un artista"
+            autocomplete="off" maxlength="100" disabled>
+
+        <div id="resultados-albumes" class="resultados-busqueda"></div>
+
+        <input type="hidden" id="album-can" name="id_album">
+
+        <!-- ARCHIVO MP3 -->
+        <label for="audio-can">Archivo MP3</label>
+
+        <input type="file" id="audio-can" name="audio"
+            accept=".mp3,audio/mpeg" required>
+
+        <small>Tamaño máximo: 20 MB.</small>
+
+        <!-- BOTONES -->
+        <div class="acciones-modal">
+            <button type="button" id="cancelar-cancion">Cancelar</button>
+            <button type="submit" class="amarillo">Guardar canción</button>
+        </div>
 
     </form>
-  </dialog>
+
+</dialog>
+
   <script src="main.js"></script>
 </body>
 
