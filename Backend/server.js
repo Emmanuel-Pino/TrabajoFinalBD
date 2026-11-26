@@ -22,6 +22,7 @@ app.use("/api", require("./routes/albumes.routes"));
 app.use("/api", require("./routes/canciones.routes"));
 app.use("/api", require("./routes/playlists.routes"));
 app.use("/api", require("./routes/comunidades.routes"));
+app.use("/api", require("./routes/publicaciones.routes"));
 app.use("/Playlist", express.static(
     path.join(__dirname, "../Playlist")
 ));
