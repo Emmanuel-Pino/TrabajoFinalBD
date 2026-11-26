@@ -396,7 +396,7 @@ input:focus-visible {
 
 .cancion {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 80px;
+    grid-template-columns: 2fr 1fr 80px 80px;
     align-items: center;
     gap: 16px;
     padding: 14px 20px;
@@ -760,4 +760,39 @@ input:focus-visible {
 #buscar-album:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+.acciones-cancion {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.acciones-cancion button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-editar-cancion {
+    background: var(--amarillo);
+    color: var(--oscuro);
+}
+
+.btn-editar-cancion:hover {
+    background: var(--verde);
+}
+
+.btn-eliminar-cancion {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-eliminar-cancion:hover {
+    background: #b91c1c;
 }
