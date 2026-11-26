@@ -20,6 +20,9 @@ app.use("/api", require("./routes/artistas.routes"));
 app.use("/api", require("./routes/albumes.routes"));
 app.use("/api", require("./routes/canciones.routes"));
 app.use("/api", require("./routes/playlists.routes"));
+app.use("/Playlist", express.static(
+    path.join(__dirname, "../Playlist")
+));
 // -----------------------------------------------------
 // RUTAS DE LA API
 // Todo lo de routes/auth.routes.js queda bajo "/api":
@@ -47,7 +50,7 @@ app.get("/api/salud", async (req, res) => {
 // Se sirven SOLO estas carpetas, para no exponer el .env del backend.
 // -----------------------------------------------------
 const raiz = path.join(__dirname, "..");
-["Login", "Main", "Foros", "Playlists", "NuevaPlaylist"].forEach((carpeta) => {
+["Login", "Main", "Foros", "Playlist", "NuevaPlaylist"].forEach((carpeta) => {
   app.use("/" + carpeta, express.static(path.join(raiz, carpeta)));
 });
 

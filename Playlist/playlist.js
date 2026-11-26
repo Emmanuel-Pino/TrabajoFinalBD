@@ -1,134 +1,884 @@
-// =====================================================
-// PLAYLISTS: lista de playlists del usuario y búsqueda
-// (maqueta: aún sin crear ni explorar playlists)
-// =====================================================
-
 const $ = (id) => document.getElementById(id);
 
-// -----------------------------------------------------
-// 1) USUARIO (nombre fijo de prueba, igual que en las otras pantallas)
-// -----------------------------------------------------
-const usuario = "PepitoPerea";
-$("nombre-lateral").textContent = usuario;
+// =====================================================
+// 1) USUARIO
+// =====================================================
 
-// -----------------------------------------------------
-// 2) DATOS FICTICIOS (luego vendrán de la base de datos)
-// Cada playlist tiene un nombre y sus etiquetas.
-// Las etiquetas corresponden a tbl_playlist_etiqueta.
-// "activa" decide si la etiqueta se ve resaltada en rosa.
-// -----------------------------------------------------
-const playlists = [
-  { id: 1, nombre: "MMM", etiquetas: [
-      { texto: "Country", activa: true },
-      { texto: "Pop",     activa: false },
-      { texto: "Hip Hop", activa: false } ] },
-  { id: 2, nombre: "Heartline", etiquetas: [
-      { texto: "Rock",       activa: true },
-      { texto: "Reggae",     activa: true },
-      { texto: "Pop Latino", activa: true } ] },
-  { id: 3, nombre: "Chillhood", etiquetas: [
-      { texto: "Chill",   activa: true },
-      { texto: "Estudiar", activa: true },
-      { texto: "Lo-fi",   activa: false } ] }
-];
+const usuario = JSON.parse(sessionStorage.getItem("usuario") || "null");
 
-let textoBusqueda = "";   // lo escrito en el buscador
-
-// -----------------------------------------------------
-// 3) IMAGEN DE LA PLAYLIST
-// Mientras no haya portadas reales, se dibuja un paisaje con SVG.
-// -----------------------------------------------------
-function crearImagen() {
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
-  svg.setAttribute("viewBox", "0 0 66 66");
-  svg.setAttribute("class", "foro-img");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = `
-    <rect width="66" height="66" fill="#bfe3f7"/>
-    <ellipse cx="22" cy="14" rx="9" ry="5" fill="#fff"/>
-    <ellipse cx="30" cy="12" rx="7" ry="5" fill="#fff"/>
-    <path d="M0 40 Q22 28 44 38 T66 34 V66 H0 Z" fill="#a8c800"/>
-    <path d="M0 50 Q24 40 66 48 V66 H0 Z" fill="#7a9a00"/>`;
-  return svg;
+if (!usuario || !usuario.id) {
+    window.location.replace("../Login/Inicio_de_sesion/inicio_sesion.html");
+} else {
+    $("nombre-lateral").textContent = usuario.nombre;
 }
 
-// -----------------------------------------------------
-// 4) DIBUJAR LA LISTA
-// Se arma con createElement + textContent (no innerHTML) para que
-// un texto escrito por el usuario nunca pueda inyectar código.
-// -----------------------------------------------------
+$("cerrar-sesion").addEventListener("click", (e) => {
+    e.preventDefault();
+
+    sessionStorage.removeItem("usuario");
+
+    window.location.replace(
+        "../Login/Inicio_de_sesion/inicio_sesion.html"
+    );
+});
+
+// =====================================================
+// 2) VARIABLES
+// =====================================================
+
+let playlists = [];
+let textoBusqueda = "";
+let playlistActual = null;
+let cancionesPlaylist = [];
+let cancionesDisponibles = [];
+let idCancionActual = null;
+
+// =====================================================
+// 3) CONSULTAR PLAYLISTS
+// =====================================================
+
+async function cargarPlaylists() {
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/playlists?id_usuario=${usuario.id}`
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        playlists = datos.playlists;
+
+        dibujarPlaylists();
+
+    } catch (error) {
+
+        console.error(error);
+
+        $("lista").textContent =
+            "No se pudieron cargar las playlists.";
+    }
+}
+
+// =====================================================
+// 4) DIBUJAR PLAYLISTS
+// =====================================================
+
 function dibujarPlaylists() {
-  const lista = $("lista");
-  lista.innerHTML = "";
 
-  const visibles = playlists.filter((p) =>
-    p.nombre.toLowerCase().includes(textoBusqueda)
-  );
+    const lista = $("lista");
 
-  if (visibles.length === 0) {
-    const p = document.createElement("p");
-    p.className = "vacio";
-    p.textContent = playlists.length === 0
-      ? "Aún no tienes playlists."
-      : "No hay playlists que coincidan.";
-    lista.appendChild(p);
-    return;
-  }
+    lista.innerHTML = "";
 
-  visibles.forEach((pl) => {
-    const tarjeta = document.createElement("article");
-    tarjeta.className = "foro";                 // misma tarjeta que en Foros
-    tarjeta.tabIndex = 0;                       // se puede enfocar con teclado
-    tarjeta.setAttribute("role", "button");
-    tarjeta.setAttribute("aria-label", "Abrir playlist " + pl.nombre);
+    const visibles = playlists.filter((pl) =>
+        normalizarTexto(pl.titulo_play).includes(textoBusqueda) ||
+        normalizarTexto(pl.descripcion_play).includes(textoBusqueda)
+    );
 
-    const nombre = document.createElement("h2");
-    nombre.className = "foro-nombre";
-    nombre.textContent = pl.nombre;
+    if (visibles.length === 0) {
 
-    const etiquetas = document.createElement("div");
-    etiquetas.className = "pildoras";
-    pl.etiquetas.slice(0, 3).forEach((e) => {   // máximo 3 etiquetas
-      const span = document.createElement("span");
-      span.className = "pildora" + (e.activa ? " activa" : "");
-      span.textContent = e.texto;
-      etiquetas.appendChild(span);
+        const mensaje = document.createElement("p");
+
+        mensaje.className = "vacio";
+
+        mensaje.textContent = playlists.length === 0
+            ? "Aún no tienes playlists."
+            : "No hay playlists que coincidan.";
+
+        lista.appendChild(mensaje);
+
+        return;
+    }
+
+    visibles.forEach((pl) => {
+
+        const tarjeta = document.createElement("article");
+        tarjeta.className = "tarjeta-playlist";
+
+        const portada = document.createElement("div");
+        portada.className = "portada-playlist";
+        portada.textContent = "♫";
+
+        const informacion = document.createElement("div");
+        informacion.className = "info-playlist";
+
+        const titulo = document.createElement("h2");
+        titulo.textContent = pl.titulo_play;
+
+        const descripcion = document.createElement("p");
+        descripcion.textContent =
+            pl.descripcion_play || "Sin descripción";
+
+        const cantidad = document.createElement("span");
+        cantidad.className = "cantidad-canciones";
+
+        cantidad.textContent = `${pl.total_canciones} ${
+            Number(pl.total_canciones) === 1
+                ? "canción"
+                : "canciones"
+        }`;
+
+        informacion.append(titulo, descripcion, cantidad);
+
+        const acciones = document.createElement("div");
+        acciones.className = "acciones-playlist";
+
+        const abrir = document.createElement("button");
+        abrir.textContent = "▶";
+        abrir.title = "Abrir playlist";
+
+        const editar = document.createElement("button");
+        editar.textContent = "✎";
+        editar.title = "Editar playlist";
+
+        const eliminar = document.createElement("button");
+        eliminar.textContent = "✕";
+        eliminar.title = "Eliminar playlist";
+
+       abrir.addEventListener("click", () => {
+    abrirPlaylist(pl.id_playlist);
+});
+
+        editar.addEventListener("click", () => {
+        editarPlaylist(pl.id_playlist);
+        });
+
+       eliminar.addEventListener("click", () => {
+    eliminarPlaylist(pl.id_playlist);
+});
+
+        acciones.append(abrir, editar, eliminar);
+
+        tarjeta.append(portada, informacion, acciones);
+
+        lista.appendChild(tarjeta);
     });
-
-    tarjeta.append(crearImagen(), nombre, etiquetas);
-
-    // Abrir la playlist (pendiente: pantalla con sus canciones)
-    const abrir = () => alert("Próximamente: abrir la playlist " + pl.nombre);
-    tarjeta.addEventListener("click", abrir);
-    tarjeta.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); abrir(); }
-    });
-
-    lista.appendChild(tarjeta);
-  });
 }
 
-// -----------------------------------------------------
+// =====================================================
 // 5) BUSCADOR
-// -----------------------------------------------------
+// =====================================================
+
+function normalizarTexto(texto) {
+
+    return String(texto ?? "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
 $("buscador").addEventListener("input", (e) => {
-  textoBusqueda = e.target.value.trim().toLowerCase();
-  dibujarPlaylists();
+
+    textoBusqueda = normalizarTexto(e.target.value.trim());
+
+    dibujarPlaylists();
 });
 
-// -----------------------------------------------------
-// 6) BOTONES (pendientes)
-// "New Playlist" y "Explorar Playlist" se harán más adelante.
-// -----------------------------------------------------
+// =====================================================
+// 6) MODAL DE PLAYLISTS
+// =====================================================
+
+const modalPlaylist = $("modal-playlist");
+
+let idPlaylistEditar = null;
+
+function limpiarFormularioPlaylist() {
+
+    idPlaylistEditar = null;
+
+    $("form-playlist").reset();
+
+    $("titulo-modal-playlist").textContent = "NUEVA PLAYLIST";
+
+    $("guardar-playlist").textContent = "Crear playlist";
+}
+
 $("btn-nueva").addEventListener("click", () => {
-  alert("Próximamente: crear una playlist.");
-});
-$("btn-explorar").addEventListener("click", () => {
-  alert("Próximamente: explorar playlists.");
+
+    limpiarFormularioPlaylist();
+
+    modalPlaylist.showModal();
 });
 
-// -----------------------------------------------------
+$("cerrar-modal").addEventListener("click", () => {
+    modalPlaylist.close();
+});
+
+$("cancelar-playlist").addEventListener("click", () => {
+    modalPlaylist.close();
+});
+
+modalPlaylist.addEventListener("close", () => {
+    limpiarFormularioPlaylist();
+});
+$("form-playlist").addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const titulo = $("titulo-play").value.trim();
+    const descripcion = $("descripcion-play").value.trim();
+
+    if (!titulo) {
+        alert("Debes ingresar un título");
+        return;
+    }
+
+    const editando = idPlaylistEditar !== null;
+
+    const url = editando
+        ? `/api/playlists/${idPlaylistEditar}`
+        : "/api/playlists";
+
+    const boton = $("guardar-playlist");
+
+    boton.disabled = true;
+
+    try {
+
+        const respuesta = await fetch(url, {
+
+            method: editando ? "PUT" : "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                titulo_play: titulo,
+                descripcion_play: descripcion,
+                id_usuario: usuario.id
+            })
+        });
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        modalPlaylist.close();
+
+        await cargarPlaylists();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        boton.disabled = false;
+    }
+});
+
+function editarPlaylist(id) {
+
+    const playlist = playlists.find(
+        (pl) => pl.id_playlist === id
+    );
+
+    if (!playlist) return;
+
+    limpiarFormularioPlaylist();
+
+    idPlaylistEditar = id;
+
+    $("titulo-modal-playlist").textContent = "EDITAR PLAYLIST";
+
+    $("guardar-playlist").textContent = "Guardar cambios";
+
+    $("titulo-play").value = playlist.titulo_play;
+
+    $("descripcion-play").value =
+        playlist.descripcion_play || "";
+
+    modalPlaylist.showModal();
+}
+async function eliminarPlaylist(id) {
+
+    const playlist = playlists.find(
+        (pl) => pl.id_playlist === id
+    );
+
+    if (!playlist) return;
+
+    const confirmado = confirm(
+        `¿Seguro que deseas eliminar "${playlist.titulo_play}"?`
+    );
+
+    if (!confirmado) return;
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/playlists/${id}?id_usuario=${usuario.id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        await cargarPlaylists();
+
+        alert(datos.mensaje);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+}
+// =====================================================
+// DETALLE DE PLAYLIST
+// =====================================================
+
+async function abrirPlaylist(id) {
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/playlists/${id}/canciones?id_usuario=${usuario.id}`
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        playlistActual = datos.playlist;
+        cancionesPlaylist = datos.canciones;
+
+        $("lista").hidden = true;
+        $("barra-playlists").hidden = true;
+        $("titulo-pagina").hidden = true;
+
+        $("detalle-playlist").hidden = false;
+
+        $("detalle-titulo").textContent =
+            playlistActual.titulo_play;
+
+        $("detalle-descripcion").textContent =
+            playlistActual.descripcion_play || "Sin descripción";
+
+        dibujarCancionesPlaylist();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+}
+function dibujarCancionesPlaylist() {
+
+    const contenedor = $("canciones-playlist");
+
+    contenedor.innerHTML = "";
+
+    $("detalle-cantidad").textContent =
+        `${cancionesPlaylist.length} ${
+            cancionesPlaylist.length === 1
+                ? "canción"
+                : "canciones"
+        }`;
+
+    if (cancionesPlaylist.length === 0) {
+
+        contenedor.textContent =
+            "Esta playlist todavía no tiene canciones.";
+
+        return;
+    }
+
+    cancionesPlaylist.forEach((cancion, index) => {
+
+        const tarjeta = document.createElement("article");
+        tarjeta.className = "cancion-playlist";
+
+        const informacion = document.createElement("div");
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = cancion.titulo_can;
+
+        const artistas = document.createElement("p");
+        artistas.textContent = cancion.artistas || "Sin artista";
+
+        informacion.append(titulo, artistas);
+
+        const album = document.createElement("p");
+        album.textContent = cancion.album || "Sencillo";
+
+        const duracion = document.createElement("span");
+        duracion.textContent = cancion.duracion_can;
+
+        const acciones = document.createElement("div");
+        acciones.className = "acciones-playlist";
+
+        const reproducir = document.createElement("button");
+        reproducir.textContent = "▶";
+        reproducir.title = "Reproducir canción";
+
+        const quitar = document.createElement("button");
+        quitar.textContent = "✕";
+        quitar.title = "Quitar de la playlist";
+
+        reproducir.addEventListener("click", () => {
+         reproducirCancionPlaylist(cancion.id_cancion);
+        });
+
+        quitar.addEventListener("click", () => {
+         quitarCancionPlaylist(cancion.id_cancion);
+        });
+
+        acciones.append(reproducir, quitar);
+
+        tarjeta.append(
+            informacion,
+            album,
+            duracion,
+            acciones
+        );
+
+        contenedor.appendChild(tarjeta);
+    });
+}
+$("btn-volver").addEventListener("click", () => {
+
+    detenerReproductor();
+
+    playlistActual = null;
+    cancionesPlaylist = [];
+
+    $("detalle-playlist").hidden = true;
+
+    $("lista").hidden = false;
+    $("barra-playlists").hidden = false;
+    $("titulo-pagina").hidden = false;
+
+    cargarPlaylists();
+});
+
+// =====================================================
+// AGREGAR CANCIONES A PLAYLIST
+// =====================================================
+
+const modalAgregarCancion = $("modal-agregar-cancion");
+
+$("btn-agregar-cancion").addEventListener("click", async () => {
+
+    if (!playlistActual) return;
+
+    try {
+
+        const respuesta = await fetch("/api/canciones");
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        cancionesDisponibles = datos.canciones;
+
+        $("buscar-cancion-playlist").value = "";
+
+        dibujarCancionesDisponibles();
+
+        modalAgregarCancion.showModal();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+});
+
+$("cerrar-modal-canciones").addEventListener("click", () => {
+    modalAgregarCancion.close();
+});
+
+$("finalizar-agregar").addEventListener("click", () => {
+    modalAgregarCancion.close();
+});
+
+$("buscar-cancion-playlist").addEventListener("input", () => {
+    dibujarCancionesDisponibles();
+});
+function dibujarCancionesDisponibles() {
+
+    const contenedor = $("canciones-disponibles");
+
+    contenedor.innerHTML = "";
+
+    const busqueda = normalizarTexto(
+        $("buscar-cancion-playlist").value.trim()
+    );
+
+    const idsAgregados = new Set(
+        cancionesPlaylist.map(c => c.id_cancion)
+    );
+
+    const visibles = cancionesDisponibles.filter(c =>
+
+        !idsAgregados.has(c.id_cancion) && (
+
+            normalizarTexto(c.titulo_can).includes(busqueda) ||
+
+            normalizarTexto(c.artistas).includes(busqueda) ||
+
+            normalizarTexto(c.album).includes(busqueda)
+        )
+    );
+
+    if (visibles.length === 0) {
+
+        contenedor.textContent =
+            "No hay canciones disponibles que coincidan.";
+
+        return;
+    }
+
+    visibles.forEach(cancion => {
+
+        const tarjeta = document.createElement("article");
+
+        tarjeta.className = "cancion-disponible";
+
+        const informacion = document.createElement("div");
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = cancion.titulo_can;
+
+        const artistas = document.createElement("p");
+        artistas.textContent = cancion.artistas || "Sin artista";
+
+        const album = document.createElement("p");
+        album.textContent = cancion.album || "Sencillo";
+
+        informacion.append(titulo, artistas, album);
+
+        const agregar = document.createElement("button");
+
+        agregar.textContent = "+";
+        agregar.title = "Agregar a la playlist";
+
+        agregar.addEventListener("click", () => {
+
+            agregarCancionPlaylist(cancion.id_cancion);
+        });
+
+        tarjeta.append(informacion, agregar);
+
+        contenedor.appendChild(tarjeta);
+    });
+}
+let agregandoCancion = false;
+
+async function agregarCancionPlaylist(idCancion) {
+
+    if (!playlistActual || agregandoCancion) return;
+
+    const idPlaylist = playlistActual.id_playlist;
+
+    agregandoCancion = true;
+
+    const botones = $("canciones-disponibles")
+        .querySelectorAll("button");
+
+    botones.forEach(boton => boton.disabled = true);
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/playlists/${idPlaylist}/canciones`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    id_cancion: idCancion,
+                    id_usuario: usuario.id
+                })
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        const cancion = cancionesDisponibles.find(
+            c => c.id_cancion === idCancion
+        );
+
+        if (playlistActual?.id_playlist === idPlaylist && cancion) {
+
+            cancionesPlaylist.push(cancion);
+
+            cancionesPlaylist.sort((a, b) =>
+                a.titulo_can.localeCompare(b.titulo_can)
+            );
+
+            dibujarCancionesPlaylist();
+
+            dibujarCancionesDisponibles();
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    } finally {
+
+        agregandoCancion = false;
+
+        $("canciones-disponibles")
+            .querySelectorAll("button")
+            .forEach(boton => boton.disabled = false);
+    }
+}
+async function quitarCancionPlaylist(idCancion) {
+
+    if (!playlistActual) return;
+
+    const idPlaylist = playlistActual.id_playlist;
+
+    const cancion = cancionesPlaylist.find(
+        c => c.id_cancion === idCancion
+    );
+
+    if (!cancion) return;
+
+    const confirmado = confirm(
+        `¿Deseas quitar "${cancion.titulo_can}" de esta playlist?`
+    );
+
+    if (!confirmado) return;
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/playlists/${idPlaylist}/canciones/${idCancion}?id_usuario=${usuario.id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.ok) {
+            throw new Error(datos.mensaje);
+        }
+
+        if (playlistActual?.id_playlist === idPlaylist) {
+
+    if (idCancionActual === idCancion) {
+        detenerReproductor();
+    }
+
+    cancionesPlaylist = cancionesPlaylist.filter(
+        c => c.id_cancion !== idCancion
+    );
+
+    dibujarCancionesPlaylist();
+}
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+}
+// =====================================================
+// REPRODUCTOR DE PLAYLISTS
+// =====================================================
+
+const audio = $("audio");
+
+audio.volume = 0.75;
+
+async function reproducirCancionPlaylist(idCancion) {
+
+    const cancion = cancionesPlaylist.find(
+        c => c.id_cancion === idCancion
+    );
+
+    if (!cancion) return;
+
+    idCancionActual = idCancion;
+
+    audio.src = "/" + cancion.ruta_audio_can;
+
+    $("reproductor-titulo").textContent = cancion.titulo_can;
+
+    $("reproductor-artista").textContent =
+        cancion.artistas || "Sin artista";
+
+    $("reproductor-playlist").hidden = false;
+
+    document.body.classList.add("reproduciendo-playlist");
+
+    $("progreso").value = 0;
+    $("tiempo-actual").textContent = "0:00";
+    $("tiempo-total").textContent = "0:00";
+
+    try {
+
+        await audio.play();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("No se pudo reproducir la canción.");
+    }
+}
+$("btn-reproducir").addEventListener("click", async () => {
+
+    if (idCancionActual === null) return;
+
+    if (audio.paused) {
+
+        try {
+            await audio.play();
+        } catch (error) {
+            console.error(error);
+        }
+
+    } else {
+
+        audio.pause();
+    }
+});
+
+audio.addEventListener("play", () => {
+    $("btn-reproducir").textContent = "⏸";
+});
+
+audio.addEventListener("pause", () => {
+    $("btn-reproducir").textContent = "▶";
+});
+
+function cambiarCancion(direccion) {
+
+    if (cancionesPlaylist.length === 0) return;
+
+    const indice = cancionesPlaylist.findIndex(
+        c => c.id_cancion === idCancionActual
+    );
+
+    const nuevoIndice = indice === -1
+        ? 0
+        : (indice + direccion + cancionesPlaylist.length)
+            % cancionesPlaylist.length;
+
+    reproducirCancionPlaylist(
+        cancionesPlaylist[nuevoIndice].id_cancion
+    );
+}
+
+$("btn-anterior").addEventListener("click", () => {
+    cambiarCancion(-1);
+});
+
+$("btn-siguiente").addEventListener("click", () => {
+    cambiarCancion(1);
+});
+
+audio.addEventListener("ended", () => {
+    cambiarCancion(1);
+});
+function formatearTiempo(segundos) {
+
+    if (!Number.isFinite(segundos)) return "0:00";
+
+    const minutos = Math.floor(segundos / 60);
+
+    const resto = Math.floor(segundos % 60)
+        .toString()
+        .padStart(2, "0");
+
+    return `${minutos}:${resto}`;
+}
+
+audio.addEventListener("loadedmetadata", () => {
+
+    $("tiempo-total").textContent =
+        formatearTiempo(audio.duration);
+});
+
+audio.addEventListener("timeupdate", () => {
+
+    $("tiempo-actual").textContent =
+        formatearTiempo(audio.currentTime);
+
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+
+        $("progreso").value =
+            (audio.currentTime / audio.duration) * 100;
+    }
+});
+
+$("progreso").addEventListener("input", (e) => {
+
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+
+        audio.currentTime =
+            (Number(e.target.value) / 100) * audio.duration;
+    }
+});
+
+$("volumen").addEventListener("input", (e) => {
+
+    audio.volume = Number(e.target.value);
+});
+function detenerReproductor() {
+
+    audio.pause();
+
+    audio.removeAttribute("src");
+
+    audio.load();
+
+    idCancionActual = null;
+
+    $("reproductor-playlist").hidden = true;
+
+    document.body.classList.remove("reproduciendo-playlist");
+
+    $("reproductor-titulo").textContent = "Selecciona una canción";
+    $("reproductor-artista").textContent = "";
+    $("btn-reproducir").textContent = "▶";
+    $("progreso").value = 0;
+    $("tiempo-actual").textContent = "0:00";
+    $("tiempo-total").textContent = "0:00";
+}
+// =====================================================
 // 7) INICIO
-// -----------------------------------------------------
-dibujarPlaylists();
+// =====================================================
+
+if (usuario?.id) {
+    cargarPlaylists();
+}
