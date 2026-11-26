@@ -5,52 +5,70 @@ const path = require("path");
 
 // Obtener todas las canciones
 async function listarCanciones(req, res) {
-  try {
-    const [canciones] = await db.execute(`
-      SELECT
-        c.id_cancion,
-        c.titulo_can,
-        c.duracion_can,
-        c.ruta_audio_can,
-        al.titulo_alb AS album,
-        GROUP_CONCAT(
-          DISTINCT ar.nombre_art
-          ORDER BY ar.nombre_art
-          SEPARATOR ', '
-        ) AS artistas
-      FROM tbl_cancion c
-      INNER JOIN tbl_album al
-        ON c.id_album = al.id_album
-      LEFT JOIN tbl_artista_cancion ac
-        ON c.id_cancion = ac.id_cancion
-      LEFT JOIN tbl_artista ar
-        ON ac.id_artista = ar.id_artista
-      GROUP BY
-        c.id_cancion,
-        c.titulo_can,
-        c.duracion_can,
-        c.ruta_audio_can,
-        al.titulo_alb
+    try {
+        const [canciones] = await db.execute(`
+    SELECT
+    c.id_cancion,
+    c.titulo_can,
+    c.duracion_can,
+    c.ruta_audio_can,
+    c.id_album,
+    al.titulo_alb AS album,
+    al.id_artista AS id_artista_principal,
+
+    GROUP_CONCAT(
+        DISTINCT ar.nombre_art
+        ORDER BY ar.nombre_art
+        SEPARATOR ', '
+    ) AS artistas,
+
+    GROUP_CONCAT(
+        DISTINCT ar.id_artista
+        ORDER BY ar.nombre_art
+        SEPARATOR ','
+    ) AS ids_artistas
+
+FROM tbl_cancion c
+
+LEFT JOIN tbl_album al
+    ON c.id_album = al.id_album
+
+LEFT JOIN tbl_artista_cancion ac
+    ON c.id_cancion = ac.id_cancion
+
+LEFT JOIN tbl_artista ar
+    ON ac.id_artista = ar.id_artista
+
+GROUP BY
+    c.id_cancion,
+    c.titulo_can,
+    c.duracion_can,
+    c.ruta_audio_can,
+    c.id_album,
+    al.titulo_alb,
+    al.id_artista
     `);
 
-    res.json({
-      ok: true,
-      canciones
-    });
+        res.json({
+            ok: true,
+            canciones
+        });
 
-  } catch (err) {
-    console.error("Error en listarCanciones:", err.message);
-    res.status(500).json({
-      ok: false,
-      mensaje: "Error al consultar las canciones."
-    });
-  }
+    } catch (err) {
+        console.error("Error en listarCanciones:", err.message);
+        res.status(500).json({
+            ok: false,
+            mensaje: "Error al consultar las canciones."
+        });
+    }
 }
 async function crearCancion(req, res) {
     let conexion;
 
     try {
-        const { titulo_can, duracion_can, id_album } = req.body;
+        const { titulo_can, duracion_can } = req.body;
+
+        const id_album = req.body.id_album || null;
         const artistas = JSON.parse(req.body.artistas || "[]");
 
         if (
@@ -119,11 +137,13 @@ async function actualizarCancion(req, res) {
 
     try {
         const { id } = req.params;
-        const { titulo_can, duracion_can, id_album } = req.body;
+        const { titulo_can, duracion_can } = req.body;
+
+        const id_album = req.body.id_album || null;
         const artistas = JSON.parse(req.body.artistas || "[]");
 
         if (
-            !titulo_can || !duracion_can || !id_album ||
+            !titulo_can || !duracion_can ||
             !Array.isArray(artistas) || artistas.length === 0
         ) {
             throw new Error("Faltan datos obligatorios");
