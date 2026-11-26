@@ -1,221 +1,292 @@
-
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Comunidades</title>
+  <title>Comunidades</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="../Main/main.css">
-    <link rel="stylesheet" href="foros.css">
+  <link rel="stylesheet" href="../Main/main.css">
+  <link rel="stylesheet" href="foros.css">
 </head>
 
 <body>
 
-    <!-- FONDO DECORATIVO -->
+  <!-- FONDO DECORATIVO -->
 
-    <svg width="0" height="0" style="position:absolute">
-        <symbol id="nota" viewBox="0 0 100 120">
-            <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z"/>
-        </symbol>
-    </svg>
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="nota" viewBox="0 0 100 120">
+      <path fill="currentColor" d="M38 8 L90 0 V84 a22 18 0 1 1 -12 -16 V26 L50 31 V92 a22 18 0 1 1 -12 -16 Z" />
+    </symbol>
+  </svg>
 
-    <svg class="nota"><use href="#nota"/></svg>
-    <svg class="nota"><use href="#nota"/></svg>
-    <svg class="nota"><use href="#nota"/></svg>
+  <svg class="nota">
+    <use href="#nota" />
+  </svg>
+  <svg class="nota">
+    <use href="#nota" />
+  </svg>
+  <svg class="nota">
+    <use href="#nota" />
+  </svg>
 
-    <div class="forma-fondo"></div>
+  <div class="forma-fondo"></div>
 
-    <div class="layout">
+  <div class="layout">
 
-        <!-- BARRA LATERAL -->
+    <!-- BARRA LATERAL -->
 
-        <aside class="lateral">
+    <aside class="lateral">
 
-            <svg class="avatar" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="30" r="22" fill="#fff"/>
-                <path d="M6 100 C6 66 28 56 50 56 C72 56 94 66 94 100 Z" fill="#fff"/>
-            </svg>
+      <svg class="avatar" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="30" r="22" fill="#fff" />
+        <path d="M6 100 C6 66 28 56 50 56 C72 56 94 66 94 100 Z" fill="#fff" />
+      </svg>
 
-            <p class="nombre-lateral" id="nombre-lateral"></p>
+      <p class="nombre-lateral" id="nombre-lateral"></p>
 
-            <nav class="menu">
-                <a href="../Main/main.html">Inicio</a>
-                <a href="../Playlist/playlist.html">Playlists</a>
-                <a href="foros.html" class="activo">Foros</a>
-                <a href="../Login/Inicio_de_sesion/inicio_sesion.html" id="cerrar-sesion">
-                    Cerrar sesión
-                </a>
-            </nav>
+      <nav class="menu">
+        <a href="../Main/main.html">Inicio</a>
+        <a href="../Playlist/playlist.html">Playlists</a>
+        <a href="foros.html" class="activo">Foros</a>
+        <a href="../Login/Inicio_de_sesion/inicio_sesion.html" id="cerrar-sesion">
+          Cerrar sesión
+        </a>
+      </nav>
 
-        </aside>
+    </aside>
 
-        <!-- CONTENIDO PRINCIPAL -->
+    <!-- CONTENIDO PRINCIPAL -->
 
-        <main class="contenido">
+    <main class="contenido">
 
-            <h1 class="titulo" id="titulo-pagina">Comunidades</h1>
+      <h1 class="titulo" id="titulo-pagina">Comunidades</h1>
 
-            <div class="barra" id="barra-comunidades">
+      <div class="barra" id="barra-comunidades">
 
-                <input
-                    type="search"
-                    id="buscador"
-                    placeholder="Buscar comunidades..."
-                    aria-label="Buscar comunidades"
-                >
+        <input type="search" id="buscador" placeholder="Buscar comunidades..." aria-label="Buscar comunidades">
 
-                <button type="button" class="amarillo" id="btn-crear">
-                    + Crear comunidad
-                </button>
+        <button type="button" class="amarillo" id="btn-crear">
+          + Crear comunidad
+        </button>
+
+      </div>
+
+      <!-- FILTROS -->
+
+      <div class="filtros-comunidades" id="filtros-comunidades">
+
+        <button type="button" class="filtro activo" id="btn-explorar">
+          Explorar todas
+        </button>
+
+        <button type="button" class="filtro" id="btn-mis-comunidades">
+          Mis comunidades
+        </button>
+
+      </div>
+
+      <!-- LISTADO DE COMUNIDADES -->
+
+      <section class="lista" id="lista" aria-live="polite">
+      </section>
+
+      <!-- DETALLE DE UNA COMUNIDAD -->
+
+      <section id="detalle-comunidad" hidden>
+
+        <button type="button" class="amarillo" id="btn-volver">
+          ← Volver
+        </button>
+
+        <div class="cabecera-comunidad">
+
+          <h2 id="detalle-nombre"></h2>
+
+          <p id="detalle-descripcion"></p>
+
+          <p id="detalle-miembros"></p>
+
+          <div class="pildoras" id="detalle-generos"></div>
+
+          <div class="pildoras" id="detalle-etiquetas"></div>
+
+        </div>
+
+        <!-- PUBLICACIONES Y CHAT -->
+
+        <div class="interior-comunidad">
+
+          <section class="panel-publicaciones">
+
+            <div class="cabecera-publicaciones">
+
+              <h2>Publicaciones</h2>
+
+              <button type="button" class="amarillo" id="btn-crear-publicacion">
+                + Crear publicación
+              </button>
 
             </div>
 
-            <!-- FILTROS -->
+            <div class="filtros-publicaciones" >
 
-            <div class="filtros-comunidades" id="filtros-comunidades">
+              <button type="button" class="filtro activo" id="btn-recientes">
+                Recientes
+              </button>
 
-                <button type="button" class="filtro activo" id="btn-explorar">
-                    Explorar todas
-                </button>
-
-                <button type="button" class="filtro" id="btn-mis-comunidades">
-                    Mis comunidades
-                </button>
+              <button type="button" class="filtro" id="btn-populares">
+                Populares
+              </button>
 
             </div>
 
-            <!-- LISTADO DE COMUNIDADES -->
-
-            <section class="lista" id="lista" aria-live="polite">
-            </section>
-
-            <!-- DETALLE DE UNA COMUNIDAD -->
-
-            <section id="detalle-comunidad" hidden>
-
-                <button type="button" class="amarillo" id="btn-volver">
-                    ← Volver
-                </button>
-
-                <div class="cabecera-comunidad">
-
-                    <h2 id="detalle-nombre"></h2>
-
-                    <p id="detalle-descripcion"></p>
-
-                    <p id="detalle-miembros"></p>
-
-                    <div class="pildoras" id="detalle-generos"></div>
-
-                    <div class="pildoras" id="detalle-etiquetas"></div>
-
-                </div>
-
-                <!-- PUBLICACIONES Y CHAT -->
-
-                <div class="interior-comunidad">
-
-                    <section class="panel-publicaciones">
-
-                        <h2>Publicaciones</h2>
-
-                        <div id="lista-publicaciones">
-                            <p>Próximamente...</p>
-                        </div>
-
-                    </section>
-
-                    <section class="panel-chat">
-
-                        <h2>Chat de la comunidad</h2>
-
-                        <div id="lista-mensajes">
-                            <p>Próximamente...</p>
-                        </div>
-
-                    </section>
-
-                </div>
-
-            </section>
-
-        </main>
-
-    </div>
-
-    <!-- MODAL PARA CREAR Y EDITAR COMUNIDADES -->
-
-    <dialog id="dialogo" class="modal-comunidad">
-
-        <form id="form-foro">
-
-            <h2 id="dialogo-titulo">Crear comunidad</h2>
-
-            <label for="nombre-foro">Nombre</label>
-
-            <input
-                type="text"
-                id="nombre-foro"
-                placeholder="Nombre de la comunidad"
-                maxlength="60"
-                required
-            >
-
-            <label for="descripcion-foro">Descripción</label>
-
-            <textarea
-                id="descripcion-foro"
-                placeholder="¿De qué trata tu comunidad?"
-                maxlength="300"
-                rows="4"
-                required
-            ></textarea>
-
-            <label for="generos-foro">Géneros musicales</label>
-
-            <input
-                type="text"
-                id="generos-foro"
-                placeholder="Pop, Rock, Indie..."
-                required
-            >
-
-            <small>Separa los géneros mediante comas.</small>
-
-            <label for="etiquetas-foro">Etiquetas</label>
-
-            <input
-                type="text"
-                id="etiquetas-foro"
-                placeholder="Chill, Estudiar, Gym..."
-            >
-
-            <small>Opcional. Separa las etiquetas mediante comas.</small>
-
-            <p class="msg" id="error-foro"></p>
-
-            <div class="acciones">
-
-                <button type="button" class="amarillo" id="btn-cancelar">
-                    Cancelar
-                </button>
-
-                <button type="submit" class="amarillo" id="btn-guardar">
-                    Crear
-                </button>
-
+            <div id="lista-publicaciones" aria-live="polite">
             </div>
 
-        </form>
+          </section>
 
-    </dialog>
+          <section class="panel-chat">
 
-    <script src="foros.js"></script>
+            <h2>Chat de la comunidad</h2>
+
+            <div id="lista-mensajes">
+              <p>Próximamente...</p>
+            </div>
+
+          </section>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- MODAL PARA CREAR Y EDITAR COMUNIDADES -->
+
+  <dialog id="dialogo" class="modal-comunidad">
+
+    <form id="form-foro">
+
+      <h2 id="dialogo-titulo">Crear comunidad</h2>
+
+      <label for="nombre-foro">Nombre</label>
+
+      <input type="text" id="nombre-foro" placeholder="Nombre de la comunidad" maxlength="60" required>
+
+      <label for="descripcion-foro">Descripción</label>
+
+      <textarea id="descripcion-foro" placeholder="¿De qué trata tu comunidad?" maxlength="300" rows="4"
+        required></textarea>
+
+      <label for="generos-foro">Géneros musicales</label>
+
+      <input type="text" id="generos-foro" placeholder="Pop, Rock, Indie..." required>
+
+      <small>Separa los géneros mediante comas.</small>
+
+      <label for="etiquetas-foro">Etiquetas</label>
+
+      <input type="text" id="etiquetas-foro" placeholder="Chill, Estudiar, Gym...">
+
+      <small>Opcional. Separa las etiquetas mediante comas.</small>
+
+      <p class="msg" id="error-foro"></p>
+
+      <div class="acciones">
+
+        <button type="button" class="amarillo" id="btn-cancelar">
+          Cancelar
+        </button>
+
+        <button type="submit" class="amarillo" id="btn-guardar">
+          Crear
+        </button>
+
+      </div>
+
+    </form>
+
+  </dialog>
+
+<!-- MODAL PARA CREAR Y EDITAR PUBLICACIONES -->
+
+<dialog id="dialogo-publicacion" class="modal-comunidad">
+
+    <form id="form-publicacion">
+
+        <h2 id="titulo-modal-publicacion">
+            Crear publicación
+        </h2>
+
+        <label for="titulo-publicacion">Título</label>
+
+        <input
+            type="text"
+            id="titulo-publicacion"
+            placeholder="Título de la publicación"
+            maxlength="100"
+            required
+        >
+
+        <label for="contenido-publicacion">Contenido</label>
+
+        <textarea
+            id="contenido-publicacion"
+            placeholder="¿Qué quieres compartir?"
+            maxlength="2000"
+            rows="5"
+            required
+        ></textarea>
+
+        <label for="cancion-publicacion">
+            Canción adjunta (opcional)
+        </label>
+
+        <select id="cancion-publicacion">
+
+            <option value="">Sin canción</option>
+
+        </select>
+
+        <small>
+            Puedes compartir una canción de nuestra biblioteca musical.
+        </small>
+
+        <p class="msg" id="error-publicacion"></p>
+
+        <div class="acciones">
+
+            <button
+                type="button"
+                class="amarillo"
+                id="btn-cancelar-publicacion"
+            >
+                Cancelar
+            </button>
+
+            <button
+                type="submit"
+                class="amarillo"
+                id="btn-guardar-publicacion"
+            >
+                Publicar
+            </button>
+
+        </div>
+
+    </form>
+
+</dialog>
+
+  <script src="foros.js"></script>
 
 </body>
+
 </html>

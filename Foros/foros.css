@@ -484,3 +484,339 @@ button:disabled {
         padding: 18px;
     }
 }
+
+/* =====================================================
+   PUBLICACIONES DE LA COMUNIDAD
+   ===================================================== */
+
+.cabecera-publicaciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cabecera-publicaciones h2 {
+    margin: 0;
+}
+
+.cabecera-publicaciones .amarillo {
+    padding: 10px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.filtros-publicaciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* ---------- TARJETA DE PUBLICACIÓN ---------- */
+
+.publicacion {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    padding: 18px;
+    background: var(--campo);
+    border: 1px solid #9b45ff;
+    border-radius: 18px;
+}
+
+.publicacion-cabecera {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.publicacion-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    background: #7a00ff;
+    color: var(--amarillo);
+    border-radius: 50%;
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.publicacion-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.publicacion-autor {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.publicacion-fecha {
+    margin-top: 4px;
+    color: var(--texto);
+    font-size: .8rem;
+}
+
+.publicacion-titulo {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.publicacion-contenido {
+    color: var(--texto);
+    font-size: 1rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- CANCIÓN ADJUNTA ---------- */
+
+.publicacion-cancion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    padding: 14px;
+    background: var(--lateral);
+    border: 1px solid #a14dff;
+    border-radius: 14px;
+}
+
+.cancion-adjunta-titulo {
+    color: var(--amarillo);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.cancion-adjunta-duracion {
+    color: var(--texto);
+    font-size: .85rem;
+}
+
+.publicacion-cancion audio {
+    width: 100%;
+    height: 40px;
+}
+
+/* ---------- INTERACCIONES ---------- */
+
+.publicacion-interacciones {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #8050b5;
+}
+
+.btn-like,
+.btn-comentarios {
+    padding: 8px 14px;
+    background: transparent;
+    color: var(--texto);
+    border: 1px solid #a14dff;
+    border-radius: 18px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-like.liked {
+    color: var(--rosa);
+    background: rgba(255, 111, 224, .12);
+    border-color: var(--rosa);
+}
+
+.btn-like:hover,
+.btn-comentarios:hover {
+    background: rgba(255, 255, 255, .08);
+}
+
+/* ---------- COMENTARIOS ---------- */
+
+.publicacion-comentarios {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.comentario {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    background: var(--lateral);
+    border-radius: 12px;
+}
+
+.comentario-autor {
+    color: var(--amarillo);
+    font-weight: 700;
+    font-size: .9rem;
+    overflow-wrap: anywhere;
+}
+
+.comentario-texto {
+    color: var(--texto);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.comentario-fecha {
+    color: var(--texto);
+    opacity: .7;
+    font-size: .75rem;
+}
+
+@media (max-width: 760px) {
+
+    .publicacion {
+        padding: 14px;
+    }
+
+    .publicacion-titulo {
+        font-size: 1.2rem;
+    }
+
+    .cabecera-publicaciones .amarillo {
+        width: 100%;
+    }
+}
+
+/* =====================================================
+   MODAL DE PUBLICACIONES
+   ===================================================== */
+
+#form-publicacion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#form-publicacion label {
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+#form-publicacion input,
+#form-publicacion textarea,
+#form-publicacion select {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--campo);
+    color: #fff;
+    border: 2px solid var(--borde);
+    border-radius: 14px;
+    font: inherit;
+    outline: none;
+}
+
+#form-publicacion input:focus,
+#form-publicacion textarea:focus,
+#form-publicacion select:focus {
+    border-color: var(--rosa);
+}
+
+#form-publicacion textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+#form-publicacion small {
+    color: var(--texto);
+    font-size: .85rem;
+}
+
+#form-publicacion select {
+    cursor: pointer;
+}
+
+.publicacion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.publicacion-acciones button {
+    padding: 8px 14px;
+    border-radius: 16px;
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* =====================================================
+   INTERACCIONES DE PUBLICACIONES
+   ===================================================== */
+
+.form-comentario {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-comentario input {
+    flex: 1;
+    min-width: 150px;
+    padding: 12px 16px;
+    background: var(--lateral);
+    color: #fff;
+    border: 2px solid var(--borde);
+    border-radius: 18px;
+    font: inherit;
+    outline: none;
+}
+
+.form-comentario input:focus {
+    border-color: var(--rosa);
+}
+
+.form-comentario input::placeholder {
+    color: var(--texto);
+    opacity: .7;
+}
+
+.form-comentario button {
+    padding: 10px 18px;
+    border-radius: 18px;
+    cursor: pointer;
+}
+
+.comentario-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn-eliminar-comentario {
+    padding: 5px 10px;
+    border-radius: 12px;
+    font: inherit;
+    font-size: .75rem;
+    cursor: pointer;
+}
+
+.comentario-error {
+    color: #ff8fa3;
+    font-size: .85rem;
+}
+
