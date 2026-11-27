@@ -1,27 +1,39 @@
-# Plataforma musical y comunidades
+# Commusity
 
-![Version](https://img.shields.io/badge/versión-1.0-blue)
+**Música, comunidad y conexión en un mismo lugar.**
+
+![Version](https://img.shields.io/badge/version-1.0-702F9B)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
 
 ## Descripción
 
-Plataforma web musical que permite escuchar, registrar y organizar canciones, además de participar en comunidades según los intereses musicales de los usuarios.
+**Commusity** es una red social enfocada en la música que reúne en un mismo espacio la reproducción musical, la organización de canciones mediante playlists y la interacción entre personas con gustos afines. Los usuarios pueden explorar el catálogo musical, registrar canciones y participar en comunidades dedicadas a sus artistas, géneros e intereses favoritos, compartiendo publicaciones, comentarios y canciones.
 
-El proyecto fue desarrollado como trabajo académico de Bases de Datos II de la Institución Universitaria Pascual Bravo. Su propósito técnico es integrar una base de datos relacional y una no relacional mediante una API REST, aplicando el enfoque de persistencia políglota.
+### Problemática
 
-## Funcionalidades
+Actualmente, muchos usuarios escuchan y organizan su música en una plataforma, mientras utilizan otras para compartir sus intereses y conversar con personas que tienen gustos similares. Esta separación dificulta el descubrimiento de comunidades y contenidos musicales de interés.
+
+Commusity propone integrar estas experiencias en una sola plataforma, facilitando la exploración de comunidades por géneros y términos de búsqueda, así como el intercambio de contenido musical entre sus miembros.
+
+### Objetivo general
+
+Diseñar e implementar un sistema de información que integre una base de datos relacional con MySQL y una base de datos no relacional con MongoDB, aplicando conceptos de modelado, almacenamiento, estructuración y consulta de datos para gestionar la información musical y las interacciones sociales de los usuarios.
+
+El proyecto fue desarrollado como trabajo académico de Bases de Datos II de la Institución Universitaria Pascual Bravo.
+
+## Funcionalidades de la versión 1.0
 
 - Registro e inicio de sesión de usuarios.
-- Registro, consulta, edición y eliminación de canciones.
+- Registro y consulta de canciones; edición y eliminación únicamente por su propietario.
 - Gestión de artistas y álbumes.
 - Reproductor musical con controles de reproducción, progreso y volumen.
-- Creación y administración de playlists.
+- Creación, edición y eliminación de playlists, con opciones para agregar y retirar canciones.
 - Creación, edición y eliminación de comunidades.
-- Participación en comunidades según intereses musicales.
-- Publicaciones con canciones adjuntas opcionales, comentarios y likes.
-- Filtros de búsqueda, géneros musicales y publicaciones recientes o populares.
+- Exploración de comunidades, búsqueda por nombre, filtros por género y opciones para unirse o salir.
+- Creación, edición y eliminación de publicaciones con canciones adjuntas opcionales, comentarios y likes.
+- Búsqueda de canciones por título, artista o álbum; ordenamiento de publicaciones recientes o populares.
 - Validaciones de propiedad para editar y eliminar contenido.
 
 ## Tecnologías
@@ -30,12 +42,13 @@ El proyecto fue desarrollado como trabajo académico de Bases de Datos II de la 
 |---|---|
 | Frontend | HTML5, CSS3 y JavaScript |
 | Backend | Node.js y Express |
-| Base de datos relacional | MySQL |
+| Base de datos relacional | MySQL 8.0 |
 | Base de datos no relacional | MongoDB |
 | Acceso a datos | mysql2 y MongoDB Node.js Driver |
 | Carga de archivos | Multer |
 | Hash de contraseñas | bcryptjs |
 | Variables de entorno | dotenv |
+| Comunicación entre orígenes | cors |
 | Control de versiones | Git y GitHub |
 
 ## Arquitectura
@@ -44,13 +57,21 @@ La aplicación utiliza una arquitectura cliente-servidor con un backend modular 
 
 ```mermaid
 flowchart TD
-    A[Frontend: HTML, CSS y JavaScript] <-->|HTTP / JSON / FormData| B[API REST: Express]
-    B --> C[Rutas y middlewares]
-    C --> D[Controladores]
-    D --> E[MySQL]
-    D --> F[MongoDB]
-    D --> G[Archivos MP3]
+    A[Frontend] <--> B[Backend]
+    B <--> C[API REST]
+    C <--> D[(MongoDB)]
+    C <--> E[(MySQL)]
+    classDef front fill:#702F9B,stroke:#702F9B,color:#fff
+    classDef back fill:#3B0D6B,stroke:#702F9B,color:#fff
+    classDef mongo fill:#146B39,stroke:#146B39,color:#fff
+    classDef sql fill:#245581,stroke:#245581,color:#fff
+    class A front
+    class B,C back
+    class D mongo
+    class E sql
 ```
+
+El diagrama resume los componentes de la aplicación. La API REST forma parte del backend Express; el frontend realiza peticiones HTTP a esa API y los controladores del backend consultan las bases de datos. No existe una conexión directa del navegador con MySQL ni MongoDB.
 
 ### Integración de bases de datos
 
@@ -64,11 +85,39 @@ No existen claves foráneas entre ambos motores. Las referencias se validan medi
 
 Los archivos MP3 se almacenan en el sistema de archivos del servidor; MySQL conserva sus rutas y metadatos.
 
+## Diseño de las bases de datos
+
+### Modelo relacional — MySQL (`proyectobd`)
+
+El catálogo musical y los datos estructurados se organizan mediante entidades relacionadas. Estas son las principales tablas que intervienen en las funcionalidades de la versión 1.0:
+
+| Tabla | Responsabilidad |
+|---|---|
+| `tbl_usuario` | Cuentas de usuario y credenciales. |
+| `tbl_cancion` | Canciones, duración, ruta de audio y propietario. |
+| `tbl_artista` | Información de los artistas. |
+| `tbl_album` | Álbumes y su artista principal. |
+| `tbl_playlist` | Listas de reproducción de cada usuario. |
+| `tbl_artista_cancion` | Relación muchos a muchos entre artistas y canciones. |
+| `tbl_playlist_cancion` | Relación muchos a muchos entre playlists y canciones. |
+
+El modelo académico también contempla géneros, etiquetas y la biblioteca personal, junto con sus respectivas tablas intermedias. Su presencia en el diseño no implica que todas estas funcionalidades estén disponibles en la interfaz actual.
+
+### Modelo documental — MongoDB (`red_musica`)
+
+| Colección | Información almacenada | Estado |
+|---|---|---|
+| `comunidades` | Nombre, descripción, géneros, etiquetas, creador y miembros. | Implementada |
+| `publicaciones` | Autor, comunidad, contenido, fecha, canción opcional, comentarios y likes. | Implementada |
+| `mensajes` | Documentos individuales para mensajes de cada comunidad. | Reservada para el chat futuro |
+
+Los comentarios y likes se almacenan dentro del documento de cada publicación. Las publicaciones se relacionan con su comunidad mediante `id_comunidad`, que referencia su `_id` de tipo `ObjectId`. Los identificadores de usuarios y canciones referencian registros de MySQL y se validan desde el backend.
+
 ## Estructura del proyecto
 
 ```text
 TrabajoFinalBD/
-├── backend/
+├── Backend/
 │   ├── audio/          # Archivos MP3
 │   ├── config/         # Conexiones a MySQL y MongoDB
 │   ├── controllers/    # Lógica de negocio y operaciones CRUD
@@ -83,6 +132,7 @@ TrabajoFinalBD/
 ├── Main/               # Página principal y reproductor
 ├── Playlist/           # Gestión de playlists
 ├── Foros/              # Comunidades y publicaciones
+├── NuevaPlaylist/      # Carpeta prevista en la estructura original
 └── README.md
 ```
 
@@ -101,13 +151,13 @@ TrabajoFinalBD/
 Descargar o clonar el repositorio, abrir una terminal en la raíz del proyecto y ejecutar:
 
 ```bash
-cd backend
+cd Backend
 npm ci
 ```
 
 ### 3. Configurar MySQL
 
-Iniciar MySQL Server e importar el esquema actualizado de la base de datos `proyectoBD`. El esquema debe incluir la relación entre las canciones y sus usuarios propietarios.
+Iniciar MySQL Server e importar el esquema actualizado de la base de datos `proyectobd` (denominada `proyectoBD` en el documento académico). El esquema debe incluir la relación entre las canciones y sus usuarios propietarios.
 
 ### 4. Configurar MongoDB
 
@@ -121,7 +171,7 @@ La aplicación utiliza la base de datos `red_musica`, con las colecciones `comun
 
 ### 5. Configurar las variables de entorno
 
-Crear el archivo `backend/.env`. Ejemplo orientativo:
+Crear el archivo `Backend/.env`. Ejemplo de configuración local:
 
 ```env
 PORT=3000
@@ -129,16 +179,16 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=tu_usuario
 DB_PASSWORD=tu_contrasena
-DB_NAME=proyectoBD
+DB_NAME=proyectobd
 MONGO_URI=mongodb://127.0.0.1:27017
 MONGO_DB=red_musica
 ```
 
-Los nombres de las variables de MySQL deben coincidir con los utilizados en `backend/config/db.js`. No publicar credenciales reales ni subir el archivo `.env` al repositorio.
+Los nombres de las variables de MySQL coinciden con los del archivo `config/db.js` de la copia revisada. Comprueba el nombre exacto de la base y las credenciales en tu instalación. Respeta las mayúsculas y minúsculas de las carpetas de tu repositorio; si se llama `backend`, utiliza ese nombre en los comandos. No publicar credenciales reales ni subir el archivo `.env` al repositorio.
 
 ### 6. Iniciar el backend
 
-Desde la carpeta `backend`, ejecutar:
+Desde la carpeta `Backend`, ejecutar:
 
 ```bash
 npm start
@@ -199,11 +249,20 @@ La consistencia entre MySQL, MongoDB y los archivos de audio depende de las vali
 
 - Chat en tiempo real dentro de las comunidades.
 - Biblioteca musical personal.
+- Etiquetas de nicho para canciones y playlists.
+- Reacciones de like y dislike sobre canciones (distintas de los likes de publicaciones).
+- Recomendaciones de comunidades a partir de preferencias musicales.
 - Autenticación segura mediante sesiones de servidor o tokens verificados.
 - Fortalecimiento de la consistencia entre bases de datos.
 - Paginación y optimización de consultas.
 
-## Contexto académico
+## Integrantes y contexto académico
+
+- Jelen Mildrei Alzate Rivera
+- Emmanuel Pino Ramirez
+
+**Docente:** Maira Liseth Pérez Diaz  
+**Grupo:** 001 ET0062  
 
 **Institución:** Institución Universitaria Pascual Bravo  
 **Programa:** Tecnología en Desarrollo de Software  
@@ -212,3 +271,5 @@ La consistencia entre MySQL, MongoDB y los archivos de audio depende de las vali
 **Año:** 2026
 
 Proyecto desarrollado con fines académicos para demostrar la integración de bases de datos relacionales y documentales en una aplicación web funcional.
+
+La documentación académica *COMMUSITY - TRABAJO FINAL* recoge el planteamiento, el objetivo, la arquitectura general y los modelos de datos. Este README describe el alcance funcional de la versión 1.0 y separa las funcionalidades previstas para futuras versiones.
