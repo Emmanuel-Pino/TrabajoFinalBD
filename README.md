@@ -123,7 +123,7 @@ TrabajoFinalBD/
 │   ├── controllers/    # Lógica de negocio y operaciones CRUD
 │   ├── middlewares/    # Procesamiento y validación de solicitudes
 │   ├── routes/         # Endpoints de la API
-│   ├── .env            # Configuración local (no publicar)
+│   ├── .env            # Configuración local (privada)
 │   ├── .gitignore
 │   ├── package.json
 │   ├── package-lock.json
