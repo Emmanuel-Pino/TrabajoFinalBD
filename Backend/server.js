@@ -14,8 +14,8 @@ const app = express();
 // -----------------------------------------------------
 // MIDDLEWARES (se ejecutan en cada petición, en este orden)
 // -----------------------------------------------------
-app.use(cors());           // permite que las páginas llamen a la API
-app.use(express.json());   // permite leer el cuerpo JSON de las peticiones
+app.use(cors());          
+app.use(express.json());   
 app.use("/audio", express.static(path.join(__dirname, "audio")));
 app.use("/api", require("./routes/artistas.routes"));
 app.use("/api", require("./routes/albumes.routes"));
@@ -28,16 +28,11 @@ app.use("/Playlist", express.static(
 ));
 // -----------------------------------------------------
 // RUTAS DE LA API
-// Todo lo de routes/auth.routes.js queda bajo "/api":
-//   POST /api/registro
 // -----------------------------------------------------
 app.use("/api", require("./routes/auth.routes"));
 
 
-// -----------------------------------------------------
-// RUTA DE PRUEBA: comprueba que el servidor y MySQL responden
-// Ábrela en el navegador: http://localhost:3000/api/salud
-// -----------------------------------------------------
+
 app.get("/api/salud", async (req, res) => {
 
     const estado = {
@@ -70,8 +65,6 @@ app.get("/api/salud", async (req, res) => {
 
 // -----------------------------------------------------
 // PÁGINAS DEL PROYECTO
-// Así las abres en http://localhost:3000/Login/inicio_sesion/inicio_sesion.html
-// Se sirven SOLO estas carpetas, para no exponer el .env del backend.
 // -----------------------------------------------------
 const raiz = path.join(__dirname, "..");
 ["Login", "Main", "Foros", "Playlist", "NuevaPlaylist"].forEach((carpeta) => {

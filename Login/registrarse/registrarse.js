@@ -1,8 +1,5 @@
 // =====================================================
 // REGISTRO: validación del formulario y envío al servidor
-// Ruta del backend: POST /api/registro  (backend/routes/auth.routes.js)
-// IMPORTANTE: abre esta página desde el servidor:
-//   http://localhost:3000/Login/registrarse/registrarse.html
 // =====================================================
 
 // Dirección de la API (el servidor debe estar encendido con npm start)

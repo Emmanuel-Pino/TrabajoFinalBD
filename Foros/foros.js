@@ -1,7 +1,6 @@
 
 // =====================================================
 // FOROS - COMUNIDADES
-// Integración con MySQL y MongoDB mediante la API
 // =====================================================
 
 const $ = (id) => document.getElementById(id);

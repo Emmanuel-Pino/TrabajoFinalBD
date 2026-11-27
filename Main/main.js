@@ -6,9 +6,6 @@ const $ = (id) => document.getElementById(id);
 
 // -----------------------------------------------------
 // 1) USUARIO (sesión)
-// El login guardó { id, nombre } en sessionStorage (ver
-// inicio_sesion.js). Aquí lo leemos. Si no hay sesión, o el dato
-// está dañado, mandamos a la persona de vuelta al login.
 // -----------------------------------------------------
 const LOGIN_URL = "/Login/Inicio_de_sesion/inicio_sesion.html";
 
