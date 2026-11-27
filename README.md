@@ -201,34 +201,6 @@ Comprobar el estado de las conexiones en:
 
 No es necesario utilizar Live Server, ya que Express sirve los archivos del frontend. La aplicación puede ejecutarse localmente sin conexión a Internet, siempre que las dependencias, bases de datos y archivos necesarios estén disponibles.
 
-## API REST
-
-Principales endpoints del sistema:
-
-| Método | Endpoint | Descripción |
-|---|---|---|
-| GET | `/api/salud` | Comprobar las conexiones |
-| GET | `/api/canciones` | Consultar canciones |
-| POST | `/api/canciones` | Registrar una canción |
-| PUT | `/api/canciones/:id` | Actualizar una canción propia |
-| DELETE | `/api/canciones/:id` | Eliminar una canción propia |
-| GET | `/api/artistas` | Consultar artistas |
-| GET | `/api/albumes` | Consultar álbumes |
-| GET | `/api/playlists` | Consultar playlists del usuario |
-| POST | `/api/playlists` | Crear una playlist |
-| GET | `/api/comunidades` | Consultar comunidades |
-| POST | `/api/comunidades` | Crear una comunidad |
-| POST | `/api/comunidades/:id/unirse` | Unirse a una comunidad |
-| POST | `/api/comunidades/:id/salir` | Salir de una comunidad |
-| GET | `/api/publicaciones/comunidad/:id` | Consultar publicaciones |
-| POST | `/api/publicaciones` | Crear una publicación |
-| PUT | `/api/publicaciones/:id` | Editar una publicación |
-| DELETE | `/api/publicaciones/:id` | Eliminar una publicación |
-| POST | `/api/publicaciones/:id/comentarios` | Agregar un comentario |
-| POST | `/api/publicaciones/:id/likes` | Agregar un like |
-| GET | `/api/publicaciones/comunidad/:id/estadisticas` | Consultar popularidad |
-
-Las operaciones que requieren identificar al usuario reciben su identificador en el cuerpo o los parámetros de consulta, según el endpoint. Las operaciones de carga de canciones utilizan `multipart/form-data`.
 
 ## Seguridad e integridad
 
@@ -239,22 +211,7 @@ Las operaciones que requieren identificar al usuario reciben su identificador en
 - Prevención de likes duplicados mediante `$addToSet`.
 - Validación de archivos MP3 y límite de carga de 20 MB.
 
-### Limitaciones actuales
 
-La identificación del usuario se conserva en `sessionStorage` y se envía al backend. Este mecanismo es provisional: el identificador puede manipularse y no constituye autenticación segura del lado del servidor. La aplicación está orientada a una demostración académica local, no a un despliegue público de producción.
-
-La consistencia entre MySQL, MongoDB y los archivos de audio depende de las validaciones y operaciones del backend. Una canción eliminada puede dejar una referencia histórica en una publicación.
-
-## Mejoras futuras — Versión 2.0
-
-- Chat en tiempo real dentro de las comunidades.
-- Biblioteca musical personal.
-- Etiquetas de nicho para canciones y playlists.
-- Reacciones de like y dislike sobre canciones (distintas de los likes de publicaciones).
-- Recomendaciones de comunidades a partir de preferencias musicales.
-- Autenticación segura mediante sesiones de servidor o tokens verificados.
-- Fortalecimiento de la consistencia entre bases de datos.
-- Paginación y optimización de consultas.
 
 ## Integrantes y contexto académico
 
@@ -269,7 +226,3 @@ La consistencia entre MySQL, MongoDB y los archivos de audio depende de las vali
 **Asignatura:** Bases de Datos II  
 **Versión:** 1.0  
 **Año:** 2026
-
-Proyecto desarrollado con fines académicos para demostrar la integración de bases de datos relacionales y documentales en una aplicación web funcional.
-
-La documentación académica *COMMUSITY - TRABAJO FINAL* recoge el planteamiento, el objetivo, la arquitectura general y los modelos de datos. Este README describe el alcance funcional de la versión 1.0 y separa las funcionalidades previstas para futuras versiones.
